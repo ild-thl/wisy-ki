@@ -225,7 +225,7 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 		$sets = array();
 
 		// Sort the results based on semantic similarity.
-		$pytonapi = new WISY_KI_PYTHON_CLASS();
+		$pythonapi = new WISY_KI_PYTHON_CLASS();
 
 		// Build string describing the user.
 		// TODO Add additional info from account, if user loggedin.
@@ -234,11 +234,35 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 			$base .= $occupation->label;
 		}
 		foreach ($skills as $skill) {
-			$base .= ', ' . $skill->label . ': ' . $skill->levelGoal;
+			$base .= ', ' . $skill->label . ': ' . $skill->levelGoal . ', ' . $skill->levelGoalID;
 		}
 
 		// Sort all courses for the best semantic fit. 
-		$semanticMatches = $pytonapi->sortsemantic($base, $results);
+		$semanticMatches = $pythonapi->score_semantically($base, $results, false);
+
+		// Adjust score based on levelGoal-Matching
+		foreach ($semanticMatches as $coursekey => $course) {
+			$fitsLevelGoal = false;
+			foreach ($skills as $skillkey => $skill) {
+				if (!in_array($skill->label, $course['tags']) AND  !in_array(preg_replace('/ +\(ESCO\)/', '', $skill->label), $course['tags'])) {
+					continue;
+				}
+				if ($skill->levelGoalID == "" OR in_array($skill->levelGoalID, $course['levels'])) {
+					$fitsLevelGoal = true;
+					break;
+				}
+			}
+
+			$semanticMatches[$coursekey]['fitsLevelGoal'] = $fitsLevelGoal;
+			if (!$fitsLevelGoal) {
+				$semanticMatches[$coursekey]['score'] += -.1;
+			}
+		}
+
+        // Sort courses based on score.
+        usort($semanticMatches, function ($a, $b) {
+            return $a['score'] < $b['score'];
+        });
 
 		$ai_suggestions = array();
 		// Get top results as the courses with the most skill matches.
@@ -384,20 +408,24 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 
 
 		$start = new DateTime();
-
+		$today = strftime("%Y-%m-%d %H:%M:%S");
 		$db = new DB_Admin();
 		$db->query("SELECT d.beginn, d.beginnoptionen, d.ende, d.dauer, d.zeit_von, d.zeit_bis, d.stunden, d.preis, d.ort
 					FROM durchfuehrung d
 					INNER JOIN kurse_durchfuehrung kd ON d.id = kd.secondary_id
 					WHERE kd.primary_id = {$course['id']}
-					ORDER BY  d.beginn = '0000-00-00 00:00:00', d.beginn
-					LIMIT 1;
+					ORDER BY  d.beginn = '0000-00-00 00:00:00', d.beginn;
 		");
-		if (!$db->next_record()) {
+		$durchfuehrung = null;
+		while ($db->next_record()) {
+			if ($db->Record['beginn'] >= $today || $db->Record['beginn'] == '0000-00-00 00:00:00') {
+				$durchfuehrung = $db->Record;
+				break;
+			}
+		}
+		if (!$durchfuehrung) {
 			$durchfuehrung = array('preis' => -1);
 		}
-		$durchfuehrung = $db->Record;
-
 		$end = new DateTime();
 		$dur = $start->diff($end);
 		$this->durchf_durs[] = $dur;

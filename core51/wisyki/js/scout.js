@@ -2360,8 +2360,18 @@ class CouseListStep extends Step {
      * @returns {Object} The response object containing the search ID and the number of courses found.
      */
     async search() {
+        const skills = this.scout.account.getSkills();
+        for (const skill of Object.values(skills)) {
+            let levelGoalID = "";
+            if (skill.isLanguageSkill) {
+                levelGoalID = Object.keys(this.langlevelmapping)[Object.values(this.langlevelmapping).indexOf(skill.levelGoal)];
+            } else {
+                levelGoalID = Object.keys(this.complevelmapping)[Object.values(this.complevelmapping).indexOf(skill.levelGoal)];
+            }
+            skill.levelGoalID = levelGoalID;
+        }
         const params = {
-            skills: JSON.stringify(this.scout.account.getSkills()),
+            skills: JSON.stringify(skills),
             occupation: JSON.stringify(this.scout.account.getOccupation()),
             filters: JSON.stringify(this.scout.account.getFilters()),
         };
@@ -2699,7 +2709,11 @@ class LocationFilter extends Filter {
             }
         );
 
-        this.node.addEventListener("change", (event) => this.onChange(event));
+        this.node.addEventListener("change", (event) => {
+            if (this.selectedChoice.name) {
+                this.onChange(event);
+            }
+        });
 
         this.loadChoice();
     }
@@ -2991,12 +3005,25 @@ class FilterMenu {
      */
     update() {
         let filtercount = 0;
+        
+        this.filterNavChoices.forEach((node) => {
+            node.classList.remove('active');
+        });
 
         this.filters.forEach((filter) => {
             if (filter.isActive()) {
                 filtercount++;
+
+                // Show dot for active filter in nav.
+                this.filterNavChoices.forEach((node) => {
+                    if (node.value == filter.node.id) {
+                        node.classList.add('active');
+                    }
+                });
             }
         });
+
+        
 
         this.bubbleNode.textContent = filtercount;
         if (filtercount > 0) {
