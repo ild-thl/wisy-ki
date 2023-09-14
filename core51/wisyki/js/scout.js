@@ -924,6 +924,7 @@ class SkillPath extends Path {
             new SkillsStep(this.scout, this),
             new LevelGoalStep(this.scout, this),
             new CouseListStep(this.scout, this),
+            new CouseViewStep(this.scout, this),
         ];
     }
 
