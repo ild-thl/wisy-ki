@@ -20,6 +20,8 @@ class Account {
     #step;
     // The filters used by the user.
     #filters = {};
+    // The last selected course.
+    #selectedCourse;
 
     /**
      * Creates a new user account and checks if the user is logged in.
@@ -85,7 +87,8 @@ class Account {
             this.lastvisited = storedAccount.lastvisited;
             this.#step = storedAccount.step;
             this.#path = storedAccount.path;
-            this.#filters = storedAccount.filters;
+            this.#filters = storedAccount.filters || {};
+            this.#selectedCourse = storedAccount.selectedCourse;
         } catch (err) {
             console.error(`Error parsing "account" from localStorage:`, err);
         }
@@ -112,6 +115,7 @@ class Account {
                     path: this.#path,
                     step: this.#step,
                     filters: this.#filters,
+                    selectedCourse: this.#selectedCourse,
                 })
             );
         }
@@ -289,6 +293,23 @@ class Account {
      */
     setStep(step) {
         this.#step = step;
+        this.#store();
+    }
+
+    /**
+     * Get the last selected course of the user account.
+     * @returns {number} - The id of the last selected course of the user account.
+     */
+    getSelectedCourse() {
+        return this.#selectedCourse;
+    }
+
+    /**
+     * Set the id of the last selected course.
+     * @param {number} courseid - The courseid to set.
+     */
+    setSelectedCourse(courseid) {
+        this.#selectedCourse = courseid;
         this.#store();
     }
 
@@ -689,10 +710,17 @@ class Path {
             await this.#render();
         }
 
+        let stepNavLength = 0;
+        this.steps.forEach((step) => {
+            if (step.showInStepNav()) {
+                stepNavLength++;
+            }
+        });
+
         // Set the amount of steps -1 as a css prpoerty.
         document.documentElement.style.setProperty(
             "--steps",
-            `${this.steps.length - 1}`
+            `${stepNavLength - 1}`
         );
 
         this.updateStep(index);
@@ -738,23 +766,31 @@ class Path {
      * Updates the scout navigation.
      */
     updateScoutNav() {
+        if (!this.currentStep.showStepNav()) {
+            hide(this.scoutNavNode, "opacity");
+            return;
+        }
+
+        show(this.scoutNavNode);
         this.scoutNavNode.classList.remove("hide-future-steps");
         if (this.currentStep.hideNav()) {
             this.scoutNavNode.classList.add("hide-future-steps");
         }
 
-        this.scoutNavSteps.forEach((element) => {
-            element.classList.remove("done");
-            element.classList.remove("current-step");
-        });
-
         const currentStepIndex = this.steps.indexOf(this.currentStep);
 
-        for (let i = 0; i <= currentStepIndex; i++) {
-            this.scoutNavSteps[i].classList.add("done");
-        }
-
-        this.scoutNavSteps[currentStepIndex].classList.add("current-step");
+        this.scoutNavSteps.forEach((element) => {
+            const btn = element.querySelector("button");
+            element.classList.remove("current-step");
+            element.classList.remove("done");
+            const stepIndex = Number(btn.getAttribute("to-step"));
+            if (stepIndex <= currentStepIndex) {
+                element.classList.add("done");
+                if (stepIndex == currentStepIndex) {
+                    element.classList.add("current-step");
+                }
+            }
+        });
     }
 
     /**
@@ -795,16 +831,25 @@ class Path {
     prepareData() {
         const data = {};
         data.steps = [];
-        for (let i = 0; i < this.steps.length; i++) {
-            data.steps.push({
+        for (let i = 0, j = 0; i < this.steps.length; i++) {
+            const showInNav = this.steps[i].showInStepNav();
+
+            const stepData = {
                 index: i,
-                nav_label: i + 1,
                 name: this.steps[i].name,
-            });
+            };
+
+            if (showInNav) {
+                stepData.nav_label = ++j;
+                stepData.showInNav = showInNav;
+            }
+
+            data.steps.push(stepData);
         }
 
         data.name = this.name;
         data.label = Lang.getString(this.name + "path:label");
+        console.info(data);
         return data;
     }
 
@@ -842,6 +887,7 @@ class OccupationPath extends Path {
             new SkillsStep(this.scout, this),
             new LevelGoalStep(this.scout, this),
             new CouseListStep(this.scout, this),
+            new CouseViewStep(this.scout, this),
         ];
     }
 
@@ -970,7 +1016,7 @@ class Step {
      */
     init() {
         // Get the node for the current step and loader.
-        this.node = document.getElementById(this.name);
+        this.node = document.querySelector("#" + this.name + " .step");
         this.loader = this.node.parentNode.querySelector(
             ".loader:not(.hidden)"
         );
@@ -1085,10 +1131,15 @@ class Step {
         } else {
             show(this.scout.nextButton);
             const nextStep = this.nextStep();
-            if (nextStep && nextStep.checkPrerequisites()) {
-                enable(this.scout.nextButton);
-            } else {
+            if (this.hideNextButton()) {
                 disable(this.scout.nextButton);
+                hide(this.scout.nextButton);
+            } else {
+                if (nextStep && nextStep.checkPrerequisites()) {
+                    enable(this.scout.nextButton);
+                } else {
+                    disable(this.scout.nextButton);
+                }
             }
         }
     }
@@ -1106,7 +1157,10 @@ class Step {
      * @returns {boolean} - True if the step has been rendered, false otherwise.
      */
     isRendered() {
-        return document.getElementById(this.name).children.length !== 0;
+        return (
+            document.querySelector("#" + this.name + " .step").children
+                .length !== 0
+        );
     }
 
     /**
@@ -1114,6 +1168,30 @@ class Step {
      * @returns {boolean} - False.
      */
     hideNav() {
+        return false;
+    }
+
+    /**
+     * Controls wether this step is supposed to be shown in the step navigation.
+     * @returns {boolean} - Defaults to True.
+     */
+    showInStepNav() {
+        return true;
+    }
+
+    /**
+     * Controls wether the step navigation should be shown when the current step is active.
+     * @returns {boolean} - Defaults to True.
+     */
+    showStepNav() {
+        return true;
+    }
+
+    /**
+     * Controls wether next Button should be always hidden.
+     * @returns {boolean} - Defaults to False.
+     */
+    hideNextButton() {
         return false;
     }
 }
@@ -1159,27 +1237,6 @@ class PathStep extends Step {
     }
 
     /**
-     * Updates the navigation buttons of the PathStep.
-     */
-    updateNavButtons() {
-        if (this.isFirst()) {
-            hide(this.scout.prevButton, "visibility");
-            disable(this.scout.prevButton);
-        } else {
-            show(this.scout.prevButton);
-            enable(this.scout.prevButton);
-        }
-
-        if (this.isLast()) {
-            hide(this.scout.nextButton, "visibility");
-            disable(this.scout.nextButton);
-        } else {
-            show(this.scout.nextButton);
-            disable(this.scout.nextButton);
-        }
-    }
-
-    /**
      * Prepares the template data for the PathStep.
      */
     async prepareTemplate() {
@@ -1194,6 +1251,30 @@ class PathStep extends Step {
      * @returns {boolean} - True if navigation should be hidden, false otherwise.
      */
     hideNav() {
+        return true;
+    }
+
+    /**
+     * Controls wether this step is supposed to be shown in the step navigation.
+     * @returns {boolean} - False.
+     */
+    showInStepNav() {
+        return false;
+    }
+
+    /**
+     * Controls wether the step navigation should be shown when the current step is active.
+     * @returns {boolean} - False.
+     */
+    showStepNav() {
+        return false;
+    }
+
+    /**
+     * Controls wether next Button should be always hidden.
+     * @returns {boolean} - True.
+     */
+    hideNextButton() {
         return true;
     }
 }
@@ -1495,7 +1576,8 @@ class OccupationSkillsStep extends Step {
      */
     isRendered() {
         return (
-            document.getElementById(this.name).children.length !== 0 &&
+            document.querySelector("#" + this.name + " .step").children
+                .length !== 0 &&
             this.occupation == this.scout.account.getOccupation()
         );
     }
@@ -2042,6 +2124,7 @@ class CouseListStep extends Step {
         await super.update();
 
         await this.updateCourseResults();
+        this.updateFavAction();
     }
 
     /**
@@ -2090,6 +2173,7 @@ class CouseListStep extends Step {
         this.filterMenu.updateCourseCount(completedata.count);
 
         this.setupFavAction(courselistNode);
+        this.setupCourseViewAction(courselistNode);
     }
 
     /**
@@ -2101,26 +2185,49 @@ class CouseListStep extends Step {
         favBtns.forEach((btn) => {
             // Mark favourites.
             const courseid = btn.getAttribute("courseid");
-            const icon = btn.querySelector("i");
-            if (fav_is_favourite(courseid)) {
-                icon.classList.remove("star-icon");
-                icon.classList.add("filled-star-icon");
-            }
 
             btn.addEventListener("click", (event) => {
                 if (!fav_is_favourite(courseid)) {
                     fav_click(event, courseid);
-
-                    icon.classList.remove("star-icon");
-                    icon.classList.add("filled-star-icon");
                 } else {
                     fav_set_favourite(courseid, false);
-
-                    icon.classList.add("star-icon");
-                    icon.classList.remove("filled-star-icon");
                 }
 
+                this.updateFavAction();
                 this.scout.updateFav();
+            });
+        });
+    }
+
+    updateFavAction() {
+        const favBtns = this.node.querySelectorAll(".bookmark-btn");
+        favBtns.forEach((btn) => {
+            // Mark favourites.
+            const courseid = btn.getAttribute("courseid");
+            const icon = btn.querySelector("i");
+            if (fav_is_favourite(courseid)) {
+                icon.classList.remove("star-icon");
+                icon.classList.add("filled-star-icon");
+            } else {
+                icon.classList.remove("filled-star-icon");
+                icon.classList.add("star-icon");
+            }
+        });
+    }
+
+    /**
+     * Initalize the actions to display a course view for a course list node.
+     * @param {Object} courselistNode - The course list node object.
+     */
+    setupCourseViewAction(courselistNode) {
+        const biewBtns = courselistNode.querySelectorAll(".to-course-btn");
+        biewBtns.forEach((btn) => {
+            // Mark favourites.
+            const courseid = btn.getAttribute("courseid");
+
+            btn.addEventListener("click", (event) => {
+                this.scout.account.setSelectedCourse(courseid);
+                this.scout.update("next");
             });
         });
     }
@@ -2175,7 +2282,6 @@ class CouseListStep extends Step {
                     });
                 });
 
-                console.log(currentSkill.levelGoal);
                 currentLevelResults = filteredResults[currentSkill.levelGoal];
             }
 
@@ -2285,6 +2391,7 @@ class CouseListStep extends Step {
         this.resultList.innerHTML = html;
 
         this.setupFavAction(this.resultList);
+        this.setupCourseViewAction(this.resultList);
 
         // Get all the <details> elements
         const accordions = this.resultList.querySelectorAll("details");
@@ -2364,9 +2471,17 @@ class CouseListStep extends Step {
         for (const skill of Object.values(skills)) {
             let levelGoalID = "";
             if (skill.isLanguageSkill) {
-                levelGoalID = Object.keys(this.langlevelmapping)[Object.values(this.langlevelmapping).indexOf(skill.levelGoal)];
+                levelGoalID = Object.keys(this.langlevelmapping)[
+                    Object.values(this.langlevelmapping).indexOf(
+                        skill.levelGoal
+                    )
+                ];
             } else {
-                levelGoalID = Object.keys(this.complevelmapping)[Object.values(this.complevelmapping).indexOf(skill.levelGoal)];
+                levelGoalID = Object.keys(this.complevelmapping)[
+                    Object.values(this.complevelmapping).indexOf(
+                        skill.levelGoal
+                    )
+                ];
             }
             skill.levelGoalID = levelGoalID;
         }
@@ -2408,14 +2523,19 @@ class CouseListStep extends Step {
                 const result = results.sets[setid].results[resultid];
                 // Translate levels Niveau A, B, C to the level names definded by the language file.
                 if (result.levels.length == 0) {
-                    result.levels = [Lang.getString('courseliststep:na')];
+                    result.levels = [Lang.getString("courseliststep:na")];
                 } else {
                     for (const levelid in result.levels) {
                         const level =
-                            results.sets[setid].results[resultid].levels[levelid];
-                        if (Object.keys(this.complevelmapping).includes(level)) {
-                            results.sets[setid].results[resultid].levels[levelid] =
-                                this.complevelmapping[level];
+                            results.sets[setid].results[resultid].levels[
+                                levelid
+                            ];
+                        if (
+                            Object.keys(this.complevelmapping).includes(level)
+                        ) {
+                            results.sets[setid].results[resultid].levels[
+                                levelid
+                            ] = this.complevelmapping[level];
                         }
                     }
                 }
@@ -2439,6 +2559,141 @@ class CouseListStep extends Step {
         }
 
         return results;
+    }
+
+    /**
+     * Controls wether next Button should be always hidden.
+     * @returns {boolean} - True.
+     */
+    hideNextButton() {
+        return true;
+    }
+}
+
+/**
+ * Class representing a course view step.
+ * @extends Step
+ */
+class CouseViewStep extends Step {
+    /**
+     * Represents the last selected course to view.
+     * @type {number}
+     */
+    selectedCourse;
+
+    /**
+     * Create a course list step.
+     * @param {Object} scout - The scout object.
+     * @param {Object} path - The parent path object.
+     */
+    constructor(scout, path) {
+        super(scout, path);
+        this.name = "courseview";
+    }
+
+    /**
+     * Check prerequisites for the course list step.
+     * @returns {boolean} A boolean representing whether the prerequisites are met or not.
+     */
+    checkPrerequisites() {
+        return (
+            this.scout.account.getPath() == this.path.name &&
+            this.scout.account.getSelectedCourse()
+        );
+    }
+
+    /**
+     * Prepare template for the course list step.
+     */
+    async prepareTemplate() {
+        this.selectedCourse = this.scout.account.getSelectedCourse();
+        // Get html from kurs-renderer-class.
+        const response = await fetch(`/k${this.selectedCourse}?scout`);
+        // Convert iso-8859-1 to utf-8.
+        const buffer = await response.arrayBuffer();
+        const decoder = new TextDecoder("iso-8859-1");
+        const html = decoder.decode(buffer, { stream: true });
+        this.data.html = html;
+    }
+
+    /**
+     * Initialize rendering for the course list step.
+     */
+    initRender() {
+        super.initRender();
+        this.setupFavAction();
+    }
+
+    /**
+     * Update the course list step.
+     */
+    async update() {
+        let delay = false;
+        if (!this.isRendered()) {
+            delay = true;
+        }
+        await super.update();
+
+        this.updateFavAction();
+
+        // Delay return 200ms
+        if (delay) {
+            await Promise.resolve(new Promise((resolve) => setTimeout(resolve, 500)));
+        }
+    }
+
+    /**
+     * Checks if the step has been rendered.
+     * @returns {boolean} - True if the step has been rendered, false otherwise.
+     */
+    isRendered() {
+        return (
+            document.querySelector("#" + this.name + " .step").children
+                .length !== 0 &&
+            this.selectedCourse == this.scout.account.getSelectedCourse()
+        );
+    }
+
+    /**
+     * Controls wether this step is supposed to be shown in the step navigation.
+     * @returns {boolean} - False.
+     */
+    showInStepNav() {
+        return false;
+    }
+
+    setupFavAction() {
+        const btn = this.node.querySelector('.bookmark-btn');
+
+        btn.addEventListener("click", (event) => {
+            if (!fav_is_favourite(this.selectedCourse)) {
+                fav_click(event, this.selectedCourse);
+            } else {
+                fav_set_favourite(this.selectedCourse, false);
+            }
+
+            this.updateFavAction();
+            this.scout.updateFav();
+        });
+    }
+
+    updateFavAction() {
+        console.log('Asd');
+        const favBtns = this.node.querySelectorAll(".bookmark-btn");
+        favBtns.forEach((btn) => {
+            // Mark favourites.
+            const courseid = btn.getAttribute("courseid");
+            const icon = btn.querySelector("i");
+            if (fav_is_favourite(courseid)) {
+                console.log('is fav');
+                icon.classList.remove("star-icon");
+                icon.classList.add("filled-star-icon");
+            } else {
+                console.log('is not fav');
+                icon.classList.remove("filled-star-icon");
+                icon.classList.add("star-icon");
+            }
+        });
     }
 }
 
@@ -3005,9 +3260,9 @@ class FilterMenu {
      */
     update() {
         let filtercount = 0;
-        
+
         this.filterNavChoices.forEach((node) => {
-            node.classList.remove('active');
+            node.classList.remove("active");
         });
 
         this.filters.forEach((filter) => {
@@ -3017,13 +3272,11 @@ class FilterMenu {
                 // Show dot for active filter in nav.
                 this.filterNavChoices.forEach((node) => {
                     if (node.value == filter.node.id) {
-                        node.classList.add('active');
+                        node.classList.add("active");
                     }
                 });
             }
         });
-
-        
 
         this.bubbleNode.textContent = filtercount;
         if (filtercount > 0) {

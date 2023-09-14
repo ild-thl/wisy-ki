@@ -91,7 +91,9 @@ class WISY_KI_SCOUT_RENDERER_CLASS {
 			<?php
 			if ($additional_js) {
 				foreach ($additional_js as $jsfile) {
-					echo ('<script src="' . $jsfile . '"></script>');
+					if (!empty($jsfile)) {
+						echo ('<script src="' . $jsfile . '"></script>');
+					}
 				}
 			}
 			?>

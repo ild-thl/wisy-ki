@@ -107,6 +107,7 @@ class WISY_KURS_RENDERER_CLASS
         if (in_array($freigeschaltet, $freigeschaltet404) && !$_SESSION['loggedInAnbieterId'])
             $this->framework->error404();
 
+        $inScout = isset($_GET['scout']);
         // page start
         headerDoCache();
 
@@ -129,9 +130,10 @@ class WISY_KURS_RENDERER_CLASS
             $bodyClass .= ' wisyp_kurs_abschluss';
         }
 
-        echo $this->framework->getPrologue(array('id' => $kursId, 'title' => $title, 'ort' => $ort, 'anbieter_name' => $anbieter_name, 'anbieter_id' => $anbieterId, 'beschreibung' => $beschreibung, 'canonical' => $this->framework->getUrl('k', array('id' => $kursId)), 'bodyClass' => $bodyClass));
-        echo $this->framework->getSearchField();
-
+        if (!$inScout) {
+            echo $this->framework->getPrologue(array('id' => $kursId, 'title' => $title, 'ort' => $ort, 'anbieter_name' => $anbieter_name, 'anbieter_id' => $anbieterId, 'beschreibung' => $beschreibung, 'canonical' => $this->framework->getUrl('k', array('id' => $kursId)), 'bodyClass' => $bodyClass));
+            echo $this->framework->getSearchField();
+        }
         // start the result area
         // --------------------------------------------------------------------
 
@@ -302,22 +304,37 @@ class WISY_KURS_RENDERER_CLASS
             echo '<div class="wisy-kursstufe-content">';
             echo '<span class="wisy-kursstufe-banner">' . $nivstufe . '</span>';
 
-            echo '<span>';
+            
             if ($this->framework->iniRead('fav.use', 0)) {
-                echo '<span class="fav_add" data-favid="' . $kursId . '"></span>';
+                if (!$inScout) {
+                    echo '<span>';
+                    echo '<span class="fav_add" data-favid="' . $kursId . '"></span>';
+                    echo '</span>';
+                } else {
+                    echo '<button class="bookmark-btn labeled-icon-btn" courseid="' . $kursId . '">';
+                    echo '<i class="icon filled-star-icon"></i>Merken';
+                    echo '</button>';
+                }
             }
-            echo '</span>';
-            echo '<span class="wisy-kurs-share"> <img src="files/sh/img/sh-share.svg" alt="teilen"></span>';
+            if (!$inScout) {
+                echo '<span class="wisy-kurs-share"> <img src="files/sh/img/sh-share.svg" alt="teilen"></span>';
+            } else {
+                echo '<button class="share-btn labeled-icon-btn" courseid="' . $kursId . '">';
+                echo '<i class="icon share-icon"></i>Teilen';
+                echo '</button>';
+            }
             echo '</div>';
+            
 
 
-            //Kurs Anmeldung, Foerderstellen, Beratungsstellen
-
-            echo '<div class="wisy_kursnav">';
-            echo '<span class="wisy_kursanmeldung_section"><a href="#wisy_termin_anmeldung_section">Anmeldung</a></span>';
-            echo '<span class="wisy_kursfoerder_section"><a href="#wisy_foerderstellen_section"> F&ouml;rderung</a></span>';
-            echo '<span class="wisy_kursberatung_section"><a href="#wisy_beratungsstellen_section">Beratungsstellen</a></span>';
-            echo '</div>';
+            if (!$inScout) {
+                //Kurs Anmeldung, Foerderstellen, Beratungsstellen
+                echo '<div class="wisy_kursnav">';
+                echo '<span class="wisy_kursanmeldung_section"><a href="#wisy_termin_anmeldung_section">Anmeldung</a></span>';
+                echo '<span class="wisy_kursfoerder_section"><a href="#wisy_foerderstellen_section"> F&ouml;rderung</a></span>';
+                echo '<span class="wisy_kursberatung_section"><a href="#wisy_beratungsstellen_section">Beratungsstellen</a></span>';
+                echo '</div>';
+            }
 
 
             // Kurs-Inhalt
@@ -551,57 +568,59 @@ class WISY_KURS_RENDERER_CLASS
                 }*/ // end: tag cloud
 
 
-            $kerst = $this->framework->iniRead('kursinfo.erstellt', 1);
-            $kaend = $this->framework->iniRead('kursinfo.geaendert', 1);
-            $kvollst = $this->framework->iniRead('kursinfo.vollstaendigkeit', 1);
-            echo '<div class="wisyr_kurs_meta noprint">';
-            if ($kerst || $kaend || $kvollst) {
-                echo 'Kursinformation: ';
-                if ($kerst)
-                    echo 'erstellt am ' . $this->framework->formatDatum($date_created) . ', ';
-                if ($kaend)
-                    echo 'zuletzt ge&auml;ndert am ' . $this->framework->formatDatum($date_modified) . ', ';
-                if ($kvollst) {
-                    echo $vollst['percent'] . '% Vollst&auml;ndigkeit';
-                    echo '<div class="wisyr_vollst_info"><span class="info">Hinweise zur f&ouml;rmlichen Vollst&auml;ndigkeit der Kursinfos sagen nichts aus &uuml;ber die Qualit&auml;t der Kurse selbst. <a href="' . $this->framework->getHelpUrl(3369) . '">Mehr erfahren</a></span></div>';
-                }
-            }
-            $copyrightClass->renderCopyright($db, 'kurse', $kursId);
-            echo '</div><!-- /.wisyr_kurs_meta -->';
-
-            echo '<div class="wisyr_kurs_edit">';
-            if ($this->framework->iniRead('useredit')) {
-                if ($pflege_pweinst & 1) {
-                    $loggedInAnbieterId = $this->framework->getEditAnbieterId();
-                    if ($loggedInAnbieterId == $anbieterId) {
-                        // der eingeloggte Anbieter _entspricht_ dem Anbieter des Kurses
-                        $class = 'wisy_edittoolbar';
-                        $tooltip = '';
-                        $editurl = '';
-                    } else if ($loggedInAnbieterId > 0) {
-                        // der eingeloggte Anbieter entspricht _nicht_ dem Anbieter des Kurses
-                        $class = '';
-                        $tooltip = 'um diesen Kurs zu bearbeiten, ist ein erneuter Anbieterlogin erforderlich';
-                        $editurl = $copyrightClass->getEditUrl($db, 'kurse', $kursId);
-                    } else {
-                        // kein Anbieter eingeloggt
-                        $class = '';
-                        $tooltip = 'Login f&uuml;r Anbieter';
-                        $editurl = $copyrightClass->getEditUrl($db, 'kurse', $kursId);
+            
+            if (!$inScout) {
+                $kerst = $this->framework->iniRead('kursinfo.erstellt', 1);
+                $kaend = $this->framework->iniRead('kursinfo.geaendert', 1);
+                $kvollst = $this->framework->iniRead('kursinfo.vollstaendigkeit', 1);
+                echo '<div class="wisyr_kurs_meta noprint">';
+                if ($kerst || $kaend || $kvollst) {
+                    echo 'Kursinformation: ';
+                    if ($kerst)
+                        echo 'erstellt am ' . $this->framework->formatDatum($date_created) . ', ';
+                    if ($kaend)
+                        echo 'zuletzt ge&auml;ndert am ' . $this->framework->formatDatum($date_modified) . ', ';
+                    if ($kvollst) {
+                        echo $vollst['percent'] . '% Vollst&auml;ndigkeit';
+                        echo '<div class="wisyr_vollst_info"><span class="info">Hinweise zur f&ouml;rmlichen Vollst&auml;ndigkeit der Kursinfos sagen nichts aus &uuml;ber die Qualit&auml;t der Kurse selbst. <a href="' . $this->framework->getHelpUrl(3369) . '">Mehr erfahren</a></span></div>';
                     }
-                    echo '<span class="noprint">';
-                    $target = $editurl == '' ? '' : 'target="_blank" rel="noopener noreferrer"';
-                    echo $class ? "<span class=\"$class\">" : '';
-                    echo "<a class=\"wisyr_angebot_editlink\" href=\"" .
-                        $editurl
-                        . $this->framework->getUrl('edit', array('action' => 'ek', 'id' => $kursId)) . "\" $target title=\"$tooltip\">Angebot bearbeiten (f&uuml;r Anbieter)</a>";
-                    echo $class ? "</span>" : '';
-                    echo '</span>';
                 }
-            }
-            echo '</div><!-- /.wisyr_kurs_edit -->';
-            echo '</footer><!-- /.wisy_kurs_footer -->';
+                $copyrightClass->renderCopyright($db, 'kurse', $kursId);
+                echo '</div><!-- /.wisyr_kurs_meta -->';
 
+                echo '<div class="wisyr_kurs_edit">';
+                if ($this->framework->iniRead('useredit')) {
+                    if ($pflege_pweinst & 1) {
+                        $loggedInAnbieterId = $this->framework->getEditAnbieterId();
+                        if ($loggedInAnbieterId == $anbieterId) {
+                            // der eingeloggte Anbieter _entspricht_ dem Anbieter des Kurses
+                            $class = 'wisy_edittoolbar';
+                            $tooltip = '';
+                            $editurl = '';
+                        } else if ($loggedInAnbieterId > 0) {
+                            // der eingeloggte Anbieter entspricht _nicht_ dem Anbieter des Kurses
+                            $class = '';
+                            $tooltip = 'um diesen Kurs zu bearbeiten, ist ein erneuter Anbieterlogin erforderlich';
+                            $editurl = $copyrightClass->getEditUrl($db, 'kurse', $kursId);
+                        } else {
+                            // kein Anbieter eingeloggt
+                            $class = '';
+                            $tooltip = 'Login f&uuml;r Anbieter';
+                            $editurl = $copyrightClass->getEditUrl($db, 'kurse', $kursId);
+                        }
+                        echo '<span class="noprint">';
+                        $target = $editurl == '' ? '' : 'target="_blank" rel="noopener noreferrer"';
+                        echo $class ? "<span class=\"$class\">" : '';
+                        echo "<a class=\"wisyr_angebot_editlink\" href=\"" .
+                            $editurl
+                            . $this->framework->getUrl('edit', array('action' => 'ek', 'id' => $kursId)) . "\" $target title=\"$tooltip\">Angebot bearbeiten (f&uuml;r Anbieter)</a>";
+                        echo $class ? "</span>" : '';
+                        echo '</span>';
+                    }
+                }
+                echo '</div><!-- /.wisyr_kurs_edit -->';
+                echo '</footer><!-- /.wisy_kurs_footer -->';
+            }
 
             // end the result area
             // --------------------------------------------------------------------
@@ -613,7 +632,9 @@ class WISY_KURS_RENDERER_CLASS
 
         // ! $db->close();
 
-        echo $this->framework->getEpilogue();
+        if (!$inScout) {
+            echo $this->framework->getEpilogue();
+        }
     }
 
     function filter_foreign_k(&$db, $wisyPortalId, $kursId, $date_created)
@@ -676,9 +697,9 @@ class WISY_KURS_RENDERER_CLASS
             $val = '';
             foreach ($keyValueArray as $item) {
                 if (strpos($item['name'], 'F') === 0) {
-                    $val .= '<a href="' . $item['value'] . '"target="_blank"><span class="wisy_foerderstellen_fn">' . $item['name'] . '<p>Der Navigator hilft Dir bei der Suche nach einer f&uuml;r Dich passenden F&ouml;rderung.</p></span></a>';
+                    $val .= '<a href="' . $item['value'] . '"target="_blank"><div class="wisy_foerderstellen_fn">' . $item['name'] . '<p>Der Navigator hilft Dir bei der Suche nach einer f&uuml;r Dich passenden F&ouml;rderung.</p></div></a>';
                 } else {
-                    $val .= '<a href="' . $item['value'] . '"target="_blank"><span class="wisy_foerderstellen_' . $item['name'] . '">' . $item['name'] . '</span></a>';
+                    $val .= '<a href="' . $item['value'] . '"target="_blank"><div class="wisy_foerderstellen_' . $item['name'] . '">' . $item['name'] . '</div></a>';
                 }
             }
         }
@@ -700,7 +721,7 @@ class WISY_KURS_RENDERER_CLASS
             }
             $val = '';
             foreach ($keyValueArray as $item) {
-                $val .= '<a href="' . $item['value'] . '"target="_blank"><span class="wisy_beratungsstellen_' . $item['name'] . '">' . $item['name'] . '</span></a>';
+                $val .= '<a href="' . $item['value'] . '"target="_blank"><div class="wisy_beratungsstellen_' . $item['name'] . '">' . $item['name'] . '</div></a>';
             }
         }
         return $val;
