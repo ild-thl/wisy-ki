@@ -469,7 +469,7 @@ header p {
     width: 90vw;
     height: 50px;
     display: grid;
-    grid-template-columns: 1fr 2fr auto;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     z-index: 10;
     gap: 1em;
@@ -486,6 +486,7 @@ header p {
 
 .scout-nav__progress {
     grid-column: 2;
+    justify-self: center;
 }
 
 .scout-nav__progress ul {
