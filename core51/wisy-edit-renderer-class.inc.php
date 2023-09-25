@@ -9,7 +9,7 @@ class WISY_EDIT_RENDERER_CLASS
     var $tools;
     var $glossar;
 
-    private WISYKI_PYTHON_CLASS $pythonAPI;
+    private WISY_KI_PYTHON_CLASS $pythonAPI;
 
     /**************************************************************************
      * Tools / Misc.
@@ -26,7 +26,7 @@ class WISY_EDIT_RENDERER_CLASS
         require_once('admin/classes.inc.php');
         require_once('admin/config/trigger_kurse.inc.php');
 
-        require_once('wisyki-python-class.inc.php');
+        require_once('wisy-ki-python-class.inc.php');
 
 
         // constructor
@@ -34,7 +34,7 @@ class WISY_EDIT_RENDERER_CLASS
         $this->tools =& createWisyObject('WISY_EDIT_TOOLS_CLASS', $this->framework);
         $this->glossar =& createWisyObject('WISY_GLOSSAR_RENDERER_CLASS', $this->framework);
 
-        $this->pythonAPI = new WISYKI_PYTHON_CLASS();
+        $this->pythonAPI = new WISY_KI_PYTHON_CLASS();
 
 
         // find out the "backward" location (where to go to if "OK" or "Cancel" is hit
