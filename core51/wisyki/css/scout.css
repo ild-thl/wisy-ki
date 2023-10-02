@@ -1788,6 +1788,10 @@ details[open]>summary::after {
     max-width: 880px;
 }
 
+#courseview .wisy_showalloffers, #courseview .wisyr_anbieter_link{
+    display: none;
+}
+
 
 
 @media screen and (min-width: 420px) {

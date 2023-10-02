@@ -7,66 +7,62 @@ class Account {
     // The name of the user.
     name;
     // The occupation of the user.
-    #occupation;
+    occupation;
     // The skills associated with the user.
-    #skills = {};
+    skills = {};
     // The last visited date of the user.
     lastvisited;
     // The login status of the user.
-    #isLoggedIn;
+    isLoggedIn;
     // The currently selected path of the user.
-    #path;
+    path;
     // Teh currently selected step of the user.
-    #step;
+    step;
     // The filters used by the user.
-    #filters = {};
-    // The last selected course.
-    #selectedCourse;
+    filters = {};
 
     /**
      * Creates a new user account and checks if the user is logged in.
      */
     constructor() {
-        this.#isLoggedIn = this.#checkLogin();
+        this.isLoggedIn = this.checkLogin();
         const scoutid = false; // TODO: Get id from url to load a older saved version of the scout progress.
-        this.#load(scoutid);
+        this.load(scoutid);
     }
 
     /**
      * Reset the account details.
      */
     reset() {
-        if (this.#isLoggedIn) {
+        if (this.isLoggedIn) {
             // TODO: Delete scout progress on server.
         } else {
             localStorage.removeItem("account");
         }
 
-        this.#occupation = null;
-        this.#skills = {};
-        this.#path = null;
-        this.#step = null;
+        this.occupation = null;
+        this.skills = {};
+        this.path = null;
+        this.step = null;
     }
 
     /**
      * Check if the user is logged in.
-     * @private
      * @returns {boolean} - Whether the user is logged in.
      */
-    #checkLogin() {
+    checkLogin() {
         // TODO: Check if a user is logged into an account.
         return false;
     }
 
     /**
      * Load the user account from local storage or from server if logged in.
-     * @private
      * @param {boolean} [id=false] - The id of the user account.
      */
-    #load(id = false) {
+    load(id = false) {
         let storedAccountJSON;
 
-        if (this.#isLoggedIn && id) {
+        if (this.isLoggedIn && id) {
             // TODO: Fetch Account from server.
         } else {
             storedAccountJSON = localStorage.getItem("account");
@@ -81,14 +77,13 @@ class Account {
         try {
             const storedAccount = JSON.parse(storedAccountJSON);
 
-            this.#occupation = storedAccount.occupation;
-            this.#skills = storedAccount.skills || {};
+            this.occupation = storedAccount.occupation;
+            this.skills = storedAccount.skills || {};
             this.name = storedAccount.name;
             this.lastvisited = storedAccount.lastvisited;
-            this.#step = storedAccount.step;
-            this.#path = storedAccount.path;
-            this.#filters = storedAccount.filters || {};
-            this.#selectedCourse = storedAccount.selectedCourse;
+            this.step = storedAccount.step;
+            this.path = storedAccount.path;
+            this.filters = storedAccount.filters || {};
         } catch (err) {
             console.error(`Error parsing "account" from localStorage:`, err);
         }
@@ -96,26 +91,24 @@ class Account {
 
     /**
      * Store the user account in local storage or online if logged in.
-     * @private
      */
-    #store() {
+    store() {
         this.lastvisited = new Date().getTime();
 
-        if (this.#isLoggedIn) {
+        if (this.isLoggedIn) {
             // TODO: Store account online.
         } else {
             // Store account in local storage.
             localStorage.setItem(
                 "account",
                 JSON.stringify({
-                    occupation: this.#occupation,
-                    skills: this.#skills,
+                    occupation: this.occupation,
+                    skills: this.skills,
                     name: this.name,
                     lastvisited: this.lastvisited,
-                    path: this.#path,
-                    step: this.#step,
-                    filters: this.#filters,
-                    selectedCourse: this.#selectedCourse,
+                    path: this.path,
+                    step: this.step,
+                    filters: this.filters,
                 })
             );
         }
@@ -134,6 +127,7 @@ class Account {
     async setSkill(
         label,
         uri,
+        levelCurrent = null,
         levelGoal = null,
         isLanguageSkill = null,
         isOccupationSkill = null,
@@ -142,13 +136,14 @@ class Account {
         const skill = {
             uri: uri,
             label: label,
+            levelCurrent: levelCurrent,
             levelGoal: levelGoal,
             isLanguageSkill: isLanguageSkill,
             isOccupationSkill: isOccupationSkill,
             similarSkills: similarSkills,
         };
-        this.#skills[uri] = skill;
-        this.#store();
+        this.skills[uri] = skill;
+        this.store();
 
         await this.updateSkillInfo(skill);
     }
@@ -180,8 +175,8 @@ class Account {
         if (skill.similarSkills == null) {
             skill.similarSkills = skillInfo.similarSkills;
         }
-        this.#skills[skill.uri] = skill;
-        this.#store();
+        this.skills[skill.uri] = skill;
+        this.store();
     }
 
     /**
@@ -189,8 +184,8 @@ class Account {
      * @param {string} uri - The URI of the skill to remove.
      */
     removeSkill(uri) {
-        delete this.#skills[uri];
-        this.#store();
+        delete this.skills[uri];
+        this.store();
     }
 
     /**
@@ -198,7 +193,7 @@ class Account {
      * @returns {Object} - The skills of the user account.
      */
     getSkills() {
-        return this.#skills;
+        return Object.assign({}, this.skills);
     }
 
     /**
@@ -207,7 +202,7 @@ class Account {
      * @returns {Object} - The requested skill.
      */
     getSkill(uri) {
-        return this.#skills[uri];
+        return this.skills[uri];
     }
 
     /**
@@ -215,7 +210,7 @@ class Account {
      * @returns {Object} - The filters of the user account.
      */
     getFilters() {
-        return this.#filters;
+        return this.filters;
     }
 
     /**
@@ -224,7 +219,7 @@ class Account {
      * @returns {Object} - The requested filter.
      */
     getFilter(filter) {
-        return this.#filters[filter];
+        return this.filters[filter];
     }
 
     /**
@@ -233,8 +228,8 @@ class Account {
      * @param {string} value - The value of the filter.
      */
     setFilter(filter, value) {
-        this.#filters[filter] = value;
-        this.#store();
+        this.filters[filter] = value;
+        this.store();
     }
 
     /**
@@ -242,7 +237,7 @@ class Account {
      * @returns {string} - The currently selected path of the user.
      */
     getPath() {
-        return this.#path;
+        return this.path;
     }
 
     /**
@@ -250,7 +245,7 @@ class Account {
      * @returns {Object} - The occupation of the user account.
      */
     getOccupation() {
-        return this.#occupation;
+        return this.occupation;
     }
 
     /**
@@ -264,10 +259,10 @@ class Account {
             uri: uri,
         };
 
-        this.#occupation = occupation;
+        this.occupation = occupation;
         // Reset skills.
-        this.#skills = {};
-        this.#store();
+        this.skills = {};
+        this.store();
     }
 
     /**
@@ -275,8 +270,8 @@ class Account {
      * @param {string} path - The path to set.
      */
     setPath(path) {
-        this.#path = path;
-        this.#store();
+        this.path = path;
+        this.store();
     }
 
     /**
@@ -284,7 +279,7 @@ class Account {
      * @returns {number} - The step of the user account.
      */
     getStep() {
-        return this.#step;
+        return this.step;
     }
 
     /**
@@ -292,25 +287,8 @@ class Account {
      * @param {number} step - The step to set.
      */
     setStep(step) {
-        this.#step = step;
-        this.#store();
-    }
-
-    /**
-     * Get the last selected course of the user account.
-     * @returns {number} - The id of the last selected course of the user account.
-     */
-    getSelectedCourse() {
-        return this.#selectedCourse;
-    }
-
-    /**
-     * Set the id of the last selected course.
-     * @param {number} courseid - The courseid to set.
-     */
-    setSelectedCourse(courseid) {
-        this.#selectedCourse = courseid;
-        this.#store();
+        this.step = step;
+        this.store();
     }
 
     /**
@@ -325,8 +303,8 @@ class Account {
             return false;
         }
         const params = { uri: uri };
-        if (this.#occupation) {
-            params.occupationuri = this.#occupation.uri;
+        if (this.occupation) {
+            params.occupationuri = this.occupation.uri;
         }
         const url = "./esco/getSkillInfo?" + new URLSearchParams(params);
         const response = await fetch(url);
@@ -372,6 +350,35 @@ class Scout {
      * @type {HTMLElement}
      */
     prevButton;
+
+    /**
+     * Represents the comp level mapping to the Lang strings.
+     * @type {Object}
+     */
+    complevelmapping = {
+        "Niveau A": Lang.getString("complevela"),
+        "Niveau B": Lang.getString("complevelb"),
+        "Niveau C": Lang.getString("complevelc"),
+    };
+
+    /**
+     * Represents the language level mapping to the Lang strings.
+     * @type {Object}
+     */
+    langlevelmapping = {
+        A1: Lang.getString("languagelevela1"),
+        A2: Lang.getString("languagelevela2"),
+        B1: Lang.getString("languagelevelb1"),
+        B2: Lang.getString("languagelevelb2"),
+        C1: Lang.getString("languagelevelc1"),
+        C2: Lang.getString("languagelevelc2"),
+    };
+
+    /**
+     * Represents the results of the last search.
+     * @type {Object}
+     */
+    searchResults;
 
     /**
      * Creates an instance of Scout.
@@ -574,6 +581,12 @@ class Path {
     scoutNavSteps;
 
     /**
+     * Element for the stepNumberIndicator.
+     * @type {Element}
+     */
+    stepNumberIndicator;
+
+    /**
      * The main node of the path.
      * @type {Element}
      */
@@ -602,12 +615,10 @@ class Path {
      * The private method to render the path.
      * @returns {Promise<void>} A promise that resolves when the path is rendered.
      */
-    async #render() {
+    async render() {
         const data = this.prepareData();
 
-        const response = await fetch("core51/wisyki/templates/path.mustache");
-        const template = await response.text();
-        const html = Lang.render(template, data);
+        const html = await Lang.render("path", data);
         this.node = document.querySelector("main");
         this.node.innerHTML = html;
         this.node.setAttribute("currentPath", this.name);
@@ -625,21 +636,25 @@ class Path {
         this.stepsNode = this.node.querySelector(".steps > div");
 
         // Define UI action for aborting the scout.
-        const scoutShowAbortModalBtn = this.node.querySelector("#scout-abort");
-        const scoutAbortModal = this.node.querySelector(".abort-modal");
+        const scoutShowAbortModalBtn = document.querySelector("#scout-abort");
+        const scoutAbortModal = document.querySelector(".abort-modal");
         const scoutAbortBtn = this.node.querySelector(
             ".abort-modal .btn-secondary"
         );
         const scoutAbortCloseModalBtns = this.node.querySelectorAll(
             ".abort-modal .close-modal-btn"
         );
-        scoutShowAbortModalBtn.addEventListener("click", () =>
-            show(scoutAbortModal)
-        );
-        scoutAbortBtn.addEventListener("click", () => {
-            hide(scoutAbortModal);
-            this.scout.abort();
-        });
+        if (scoutShowAbortModalBtn) {
+            scoutShowAbortModalBtn.addEventListener("click", () =>
+                show(scoutAbortModal)
+            );
+        }
+        if (scoutAbortBtn) {
+            scoutAbortBtn.addEventListener("click", () => {
+                hide(scoutAbortModal);
+                this.scout.abort();
+            });
+        }
         scoutAbortCloseModalBtns.forEach((btn) =>
             btn.addEventListener("click", () => hide(scoutAbortModal))
         );
@@ -663,26 +678,30 @@ class Path {
             this.scrollToStep(this.steps.indexOf(this.currentStep));
         });
 
+        this.stepNumberIndicator = this.node.querySelector(".steptext");
+
         // Set up the level explanation modal and its associated button.
-        const modalBtn = this.node.querySelector(".open-modal-btn");
+        this.openHelpModalBtn = this.node.querySelector(".open-modal-btn");
         this.helpModal = this.node.querySelector(".modal");
-        modalBtn.addEventListener("click", () => this.toggleHelp());
+        if (this.openHelpModalBtn && this.helpModal) {
+            this.openHelpModalBtn.addEventListener("click", () => this.toggleHelp());
 
-        // Close the modal if the close button is clicked or somewhere outside of the modal.
-        this.helpModal.addEventListener(
-            "click",
-            (event) => {
-                if (
-                    event.target.closest(".close-modal-btn") ||
-                    event.target.matches(".modal__backdrop")
-                ) {
-                    hide(this.helpModal);
-                }
-            },
-            false
-        );
+            // Close the modal if the close button is clicked or somewhere outside of the modal.
+            this.helpModal.addEventListener(
+                "click",
+                (event) => {
+                    if (
+                        event.target.closest(".close-modal-btn") ||
+                        event.target.matches(".modal__backdrop")
+                    ) {
+                        hide(this.helpModal);
+                    }
+                },
+                false
+            );
 
-        this.help = this.node.querySelector(".modal__content article");
+            this.help = this.node.querySelector(".modal__content article");
+        }
     }
 
     /**
@@ -707,7 +726,7 @@ class Path {
         await this.finishBlockingProcesses();
 
         if (!this.isRendered()) {
-            await this.#render();
+            await this.render();
         }
 
         let stepNavLength = 0;
@@ -747,9 +766,17 @@ class Path {
         this.currentStep.showLoader();
 
         // Update Helpmodal content.
-        this.help.innerHTML = Lang.getString(
-            this.currentStep.name + "step:help"
-        );
+        if (this.help && this.openHelpModalBtn) {
+            const helpText = Lang.getString(
+                this.currentStep.name + "step:help"
+            );
+            this.help.innerHTML = helpText;
+            if (helpText) {
+                show(this.openHelpModalBtn);
+            } else {
+                hide(this.openHelpModalBtn);
+            }
+        }
         // Update Loader text content.
         const loadertext =
             this.currentStep.loader.querySelector(".loader__text");
@@ -766,14 +793,13 @@ class Path {
      * Updates the scout navigation.
      */
     updateScoutNav() {
+        show(this.scoutNavNode);
         if (!this.currentStep.showStepNav()) {
             hide(this.scoutNavNode, "opacity");
-            return;
         }
 
-        show(this.scoutNavNode);
         this.scoutNavNode.classList.remove("hide-future-steps");
-        if (this.currentStep.hideNav()) {
+        if (this.currentStep.hideFutureNavSteps()) {
             this.scoutNavNode.classList.add("hide-future-steps");
         }
 
@@ -788,6 +814,10 @@ class Path {
                 element.classList.add("done");
                 if (stepIndex == currentStepIndex) {
                     element.classList.add("current-step");
+                }
+                if (this.stepNumberIndicator) {
+                    this.stepNumberIndicator.textContent =
+                        btn.textContent + "/" + this.scoutNavSteps.length;
                 }
             }
         });
@@ -849,7 +879,6 @@ class Path {
 
         data.name = this.name;
         data.label = Lang.getString(this.name + "path:label");
-        console.info(data);
         return data;
     }
 
@@ -885,9 +914,10 @@ class OccupationPath extends Path {
             new OccupationStep(this.scout, this),
             new OccupationSkillsStep(this.scout, this),
             new SkillsStep(this.scout, this),
+            new LevelCurrentStep(this.scout, this),
             new LevelGoalStep(this.scout, this),
-            new CouseListStep(this.scout, this),
-            new CouseViewStep(this.scout, this),
+            new CourseListStep(this.scout, this),
+            new CourseViewStep(this.scout, this),
         ];
     }
 
@@ -922,9 +952,10 @@ class SkillPath extends Path {
         this.steps = [
             new PathStep(this.scout, this),
             new SkillsStep(this.scout, this),
+            new LevelCurrentStep(this.scout, this),
             new LevelGoalStep(this.scout, this),
-            new CouseListStep(this.scout, this),
-            new CouseViewStep(this.scout, this),
+            new CourseListStep(this.scout, this),
+            new CourseViewStep(this.scout, this),
         ];
     }
 
@@ -1017,7 +1048,7 @@ class Step {
      */
     init() {
         // Get the node for the current step and loader.
-        this.node = document.querySelector("#" + this.name + " .step");
+        this.node = document.querySelector(`#${this.name} .step`);
         this.loader = this.node.parentNode.querySelector(
             ".loader:not(.hidden)"
         );
@@ -1029,7 +1060,7 @@ class Step {
      */
     async update() {
         if (!this.isRendered()) {
-            await this.#render();
+            await this.render();
         }
 
         this.updateNavButtons();
@@ -1039,14 +1070,9 @@ class Step {
      * Renders the step.
      * @returns {Promise<void>} - A promise that resolves when the step is rendered.
      */
-    async #render() {
+    async render() {
         await this.prepareTemplate();
-        const response = await fetch(
-            "core51/wisyki/templates/" + this.name + "-step.mustache"
-        );
-        const template = await response.text();
-
-        const html = Lang.render(template, this.data, this.partials);
+        const html = await Lang.render(this.name + "-step", this.data, this.partials);
         this.node.innerHTML = html;
 
         this.initRender();
@@ -1118,6 +1144,9 @@ class Step {
      * Updates the navigation buttons based on the current step.
      */
     updateNavButtons() {
+        this.scout.prevButton.innerHTML = this.getPrevButtonContent();
+        this.scout.nextButton.innerHTML = this.getNextButtonContent();
+
         if (this.isFirst()) {
             hide(this.scout.prevButton, "visibility");
             disable(this.scout.prevButton);
@@ -1126,21 +1155,22 @@ class Step {
             enable(this.scout.prevButton);
         }
 
-        if (this.isLast()) {
+        if (this.hideNextButton() === true) {
+            hide(this.scout.nextButton);
+            disable(this.scout.nextButton);
+        } else if (this.hideNextButton() === false) {
+            show(this.scout.nextButton);
+            disable(this.scout.nextButton);
+        } else if (this.isLast()) {
             hide(this.scout.nextButton, "visibility");
             disable(this.scout.nextButton);
         } else {
             show(this.scout.nextButton);
             const nextStep = this.nextStep();
-            if (this.hideNextButton()) {
-                disable(this.scout.nextButton);
-                hide(this.scout.nextButton);
+            if (nextStep && nextStep.checkPrerequisites()) {
+                enable(this.scout.nextButton);
             } else {
-                if (nextStep && nextStep.checkPrerequisites()) {
-                    enable(this.scout.nextButton);
-                } else {
-                    disable(this.scout.nextButton);
-                }
+                disable(this.scout.nextButton);
             }
         }
     }
@@ -1158,17 +1188,14 @@ class Step {
      * @returns {boolean} - True if the step has been rendered, false otherwise.
      */
     isRendered() {
-        return (
-            document.querySelector("#" + this.name + " .step").children
-                .length !== 0
-        );
+        return document.querySelector(`#${this.name} .step`).children.length !== 0;
     }
 
     /**
      * Hides the navigation for the step.
      * @returns {boolean} - False.
      */
-    hideNav() {
+    hideFutureNavSteps() {
         return false;
     }
 
@@ -1193,7 +1220,23 @@ class Step {
      * @returns {boolean} - Defaults to False.
      */
     hideNextButton() {
-        return false;
+        return;
+    }
+
+    /**
+     * Gets the content to be displayed in the prev button.
+     * @returns {string}
+     */
+    getPrevButtonContent() {
+        return '<i class="icon arrow-icon"></i>';
+    }
+
+    /**
+     * Gets the content to be diplayed in the next button.
+     * @returns {string}
+     */
+    getNextButtonContent() {
+        return '<i class="icon arrow-icon"></i>';
     }
 }
 
@@ -1248,35 +1291,35 @@ class PathStep extends Step {
     }
 
     /**
-     * Hides the navigation of the PathStep.
-     * @returns {boolean} - True if navigation should be hidden, false otherwise.
+     * Controls wether next Button should be always hidden.
+     * @returns {boolean} - True.
      */
-    hideNav() {
+    hideNextButton() {
         return true;
     }
 
     /**
-     * Controls wether this step is supposed to be shown in the step navigation.
-     * @returns {boolean} - False.
+     * Hides the step navigation when PathStep is the current active step.
+     * @returns {boolean} - True if navigation should be hidden, false otherwise.
      */
-    showInStepNav() {
-        return false;
+    hideFutureNavSteps() {
+        return true;
     }
 
     /**
      * Controls wether the step navigation should be shown when the current step is active.
-     * @returns {boolean} - False.
+     * @returns {boolean} - Defaults to True.
      */
     showStepNav() {
         return false;
     }
 
     /**
-     * Controls wether next Button should be always hidden.
-     * @returns {boolean} - True.
+     * Controls wether this step is supposed to be shown in the step navigation.
+     * @returns {boolean} - Defaults to True.
      */
-    hideNextButton() {
-        return true;
+    showInStepNav() {
+        return false;
     }
 }
 
@@ -1577,8 +1620,7 @@ class OccupationSkillsStep extends Step {
      */
     isRendered() {
         return (
-            document.querySelector("#" + this.name + " .step").children
-                .length !== 0 &&
+            document.querySelector(`#${this.name} .step`).children.length !== 0 &&
             this.occupation == this.scout.account.getOccupation()
         );
     }
@@ -1892,6 +1934,167 @@ class SkillsStep extends Step {
 }
 
 /**
+ * Class representing the level Couurent step.
+ * @extends Step
+ */
+class LevelCurrentStep extends Step {
+    /**
+     * Represents the level goal selection list element.
+     * @type {Element}
+     */
+    levelSelectionList;
+
+    /**
+     * Create a level goal step.
+     * @param {Scout} scout - The scout object.
+     * @param {Path} path - The parent path object.
+     */
+    constructor(scout, path) {
+        super(scout, path);
+        this.name = "levelcurrent";
+    }
+
+    /**
+     * Check the prerequisites for the level goal step.
+     * @return {boolean} Return true if the current path is equal to the name of the path and the account has skills.
+     */
+    checkPrerequisites() {
+        return (
+            this.scout.account.getPath() == this.path.name &&
+            Object.keys(this.scout.account.getSkills()).length
+        );
+    }
+
+    /**
+     * Initialize the rendering of the level goal step.
+     */
+    initRender() {
+        super.initRender();
+
+        // Create and update level goal selection list
+        this.levelSelectionList = this.node.querySelector(
+            "ul.level-current-selection"
+        );
+    }
+
+    /**
+     * Update the level goal step.
+     */
+    async update() {
+        await super.update();
+
+        this.updateLevelSelection();
+    }
+
+    /**
+     * Current level + 1 = goal
+     */
+    getLevelGoal(levelCurrent, isLanguageSkill) {
+        let mapping = this.scout.complevelmapping;
+        let levelGoal = levelCurrent;
+        if (isLanguageSkill) {
+            mapping = this.scout.langlevelmapping;
+        }
+        if (!levelCurrent) {
+            levelGoal = Object.values(mapping)[0];
+        } else {
+            const levelGoalIndex =
+                Object.values(mapping).indexOf(levelCurrent) + 1;
+            if (levelGoalIndex < Object.values(mapping).length) {
+                levelGoal = Object.values(mapping)[levelGoalIndex];
+            }
+        }
+        return levelGoal;
+    }
+
+    /**
+     * Update the level selection list.
+     */
+    async updateLevelSelection() {
+        while (this.levelSelectionList.lastChild) {
+            this.levelSelectionList.removeChild(
+                this.levelSelectionList.lastChild
+            );
+        }
+
+        const skills = this.scout.account.getSkills();
+        const data = { skills: [] };
+        let skillindex = 0;
+        for (const uri in skills) {
+            skillindex++;
+            // Copy skills[uri] to const skill
+            const skill = Object.assign({}, skills[uri]);
+            skill.label = skill.label.replace(/ +\(ESCO\)/, "");
+            skill.skillnumber = skillindex + "/" + Object.values(skills).length;
+            data.skills.push(skill);
+        }
+
+        const html = await Lang.render(this.name + "-selection", data);
+        // Append html.
+        this.levelSelectionList.innerHTML = html;
+
+        for (const uri in skills) {
+            const skill = skills[uri];
+            if (skill.levelCurrent) {
+                const input = document.getElementById(
+                    "levelgoalstep_" + skill.uri + "-" + skill.levelCurrent
+                );
+                if (input) {
+                    input.checked = true;
+                }
+            }
+        }
+
+        // Get a reference to all the radio buttons in the group
+        const fieldsets = this.levelSelectionList.querySelectorAll(
+            ".scoutboxwhiteskill"
+        );
+
+        // Add an event listener to each radio button in the group
+        fieldsets.forEach((fieldset) => {
+            const skill = skills[fieldset.getAttribute("skilluri")];
+
+            fieldset.addEventListener("change", () => {
+                // Get the value of the selected radio button
+                const selectedInput = fieldset.querySelector("input:checked");
+                this.scout.account.setSkill(
+                    skill.label,
+                    skill.uri,
+                    selectedInput.value,
+                    this.getLevelGoal(
+                        selectedInput.value,
+                        skill.isLanguageSkill
+                    ),
+                    skill.isLanguageSkill,
+                    skill.isOccupationSkill,
+                    skill.similarSkills
+                );
+            });
+
+            // If not set, set default levelCurrent.
+            if (skill.levelCurrent) {
+                const currentSelection = fieldset.querySelector(
+                    'input[value="' + skill.levelCurrent + '"'
+                );
+                currentSelection.checked = true;
+            } else {
+                const firstInput = fieldset.querySelector("input");
+                firstInput.checked = true;
+                this.scout.account.setSkill(
+                    skill.label,
+                    skill.uri,
+                    firstInput.value,
+                    this.getLevelGoal(firstInput.value, skill.isLanguageSkill),
+                    skill.isLanguageSkill,
+                    skill.isOccupationSkill,
+                    skill.similarSkills
+                );
+            }
+        });
+    }
+}
+
+/**
  * Class representing the level goal step.
  * @extends Step
  */
@@ -1963,11 +2166,7 @@ class LevelGoalStep extends Step {
             data.skills.push(skill);
         }
 
-        const response = await fetch(
-            "core51/wisyki/templates/" + this.name + "-selection.mustache"
-        );
-        const template = await response.text();
-        const html = Lang.render(template, data);
+        const html = await Lang.render(this.name + "-selection", data);
         // Append html.
         this.levelSelectionList.innerHTML = html;
 
@@ -1996,6 +2195,7 @@ class LevelGoalStep extends Step {
                 this.scout.account.setSkill(
                     skill.label,
                     skill.uri,
+                    "",
                     selectedInput.value,
                     skill.isLanguageSkill,
                     skill.isOccupationSkill,
@@ -2015,6 +2215,7 @@ class LevelGoalStep extends Step {
                 this.scout.account.setSkill(
                     skill.label,
                     skill.uri,
+                    "",
                     firstInput.value,
                     skill.isLanguageSkill,
                     skill.isOccupationSkill,
@@ -2029,7 +2230,203 @@ class LevelGoalStep extends Step {
  * Class representing a course list step.
  * @extends Step
  */
-class CouseListStep extends Step {
+class SearchStep extends Step {
+    /**
+     * Represents the last state of the course list step.
+     * @type {string}
+     */
+    lastState;
+
+    /**
+     * Create a course list step.
+     * @param {Object} scout - The scout object.
+     * @param {Object} path - The parent path object.
+     */
+    constructor(scout, path) {
+        super(scout, path);
+
+        if (this.constructor == SearchStep) {
+            throw new Error("Abstract classes can't be instantiated.");
+        }
+    }
+
+    /**
+     * Check prerequisites for the course list step.
+     * @returns {boolean} A boolean representing whether the prerequisites are met or not.
+     */
+    checkPrerequisites() {
+        return (
+            this.scout.account.getPath() == this.path.name &&
+            Object.keys(this.scout.account.getSkills()).length
+        );
+    }
+
+    /**
+     * Get string representation for the count of courses.
+     * @param {number} count - The count of courses.
+     * @returns {string} The string representation of the count.
+     */
+    getKurseCountString(count) {
+        let countstring = count + " " + Lang.getString("viewcourses");
+        if (count == 1) {
+            countstring = count + " " + Lang.getString("viewcourse");
+        }
+        return countstring;
+    }
+
+    /**
+     * Get filtered course list based on the level.
+     * @param {Array} courses - The array of courses.
+     * @param {Array} levels - The levels to sort the results by.
+     * @returns {Array} The filtered array of courses.
+     */
+    getFilteredCourselist(courses, levels = null) {
+        const filteredResults = {};
+        if (!levels) {
+            filteredResults[""] = [];
+            courses.forEach((course) => {
+                const newcourse = Object.assign({}, course);
+                newcourse.showLevels = true;
+                filteredResults[""].push(newcourse);
+            });
+        } else {
+            levels.forEach((level) => {
+                filteredResults[level] = [];
+                courses.forEach((course) => {
+                    if (course.levels.includes(level)) {
+                        const newcourse = Object.assign({}, course);
+                        newcourse.showLevels = false;
+                        filteredResults[level].push(newcourse);
+                    } else if (level == "") {
+                        const newcourse = Object.assign({}, course);
+                        newcourse.showLevels = true;
+                        filteredResults[level].push(newcourse);
+                    }
+                });
+            });
+        }
+        return filteredResults;
+    }
+
+    /**
+     * Search for courses based on the users skill goals.
+     * @returns {Object} The response object containing the search ID and the number of courses found.
+     */
+    async search() {
+        if (!this.lastState) {
+            this.updateState();
+        }
+        const url = "./scout-search";
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: this.lastState,
+        });
+
+        if (response.ok) {
+            const results = await response.json();
+            return this.cleanResults(results);
+        } else {
+            console.error("HTTP-Error: " + response.status);
+        }
+    }
+
+    updateState() {
+        const skills = this.scout.account.getSkills();
+        for (const skill of Object.values(skills)) {
+            let levelGoalID = "";
+            if (skill.isLanguageSkill) {
+                levelGoalID = Object.keys(this.scout.langlevelmapping)[
+                    Object.values(this.scout.langlevelmapping).indexOf(
+                        skill.levelGoal
+                    )
+                ];
+            } else {
+                levelGoalID = Object.keys(this.scout.complevelmapping)[
+                    Object.values(this.scout.complevelmapping).indexOf(
+                        skill.levelGoal
+                    )
+                ];
+            }
+            skill.levelGoalID = levelGoalID;
+        }
+        const params = {
+            skills: skills,
+            occupation:this.scout.account.getOccupation(),
+            filters: this.scout.account.getFilters(),
+        };
+
+        const newState = JSON.stringify(params);
+    
+        if (this.lastState == newState) {
+            return false;
+        }
+        this.lastState = newState;
+        return true;
+    }
+
+    /**
+     * Controls whether the view should be rebuilt when the step runs an update.
+     * @type {boolean}
+     */
+    rebuildOnUpdate()  {
+        return true;
+    }
+
+    cleanResults(results) {
+        // Go over every result.
+        for (const setid in results.sets) {
+            const set = results.sets[setid];
+            for (const resultid in set.results) {
+                const result = results.sets[setid].results[resultid];
+                // Translate levels Niveau A, B, C to the level names definded by the language file.
+                if (result.levels.length == 0) {
+                    result.levels = [Lang.getString("courseliststep:na")];
+                } else {
+                    for (const levelid in result.levels) {
+                        const level =
+                            results.sets[setid].results[resultid].levels[
+                                levelid
+                            ];
+                        if (
+                            Object.keys(this.scout.complevelmapping).includes(level)
+                        ) {
+                            results.sets[setid].results[resultid].levels[
+                                levelid
+                            ] = this.scout.complevelmapping[level];
+                        }
+                    }
+                }
+
+                // Get LangString for ai reccomendation reasons.
+                if (results.sets[setid].results[resultid].reason) {
+                    const score = results.sets[setid].results[resultid].score;
+                    const data = {};
+                    if (score) {
+                        data.score = Math.round(score * 100);
+                    }
+                    results.sets[setid].results[resultid].reason =
+                        Mustache.render(
+                            Lang.getString(
+                                results.sets[setid].results[resultid].reason[0]
+                            ),
+                            data
+                        );
+                }
+            }
+        }
+
+        return results;
+    }
+}
+
+/**
+ * Class representing a course list step.
+ * @extends Step
+ */
+class CourseListStep extends SearchStep {
     /**
      * Represents the filter menu of the course list step.
      * @type {FilterMenu}
@@ -2043,33 +2440,16 @@ class CouseListStep extends Step {
     resultList;
 
     /**
-     * Represents the last state of the course list step.
-     * @type {Object}
+     * Path to courselist template.
+     * @type {string}
      */
-    lastState = {};
+    courselistTemplatename;
 
     /**
-     * Represents the comp level mapping to the Lang strings.
-     * @type {Object}
+     * Path to resultsets template.
+     * @type {string}
      */
-    complevelmapping = {
-        "Niveau A": Lang.getString("complevela"),
-        "Niveau B": Lang.getString("complevelb"),
-        "Niveau C": Lang.getString("complevelc"),
-    };
-
-    /**
-     * Represents the language level mapping to the Lang strings.
-     * @type {Object}
-     */
-    langlevelmapping = {
-        A1: Lang.getString("languagelevela1"),
-        A2: Lang.getString("languagelevela2"),
-        B1: Lang.getString("languagelevelb1"),
-        B2: Lang.getString("languagelevelb2"),
-        C1: Lang.getString("languagelevelc1"),
-        C2: Lang.getString("languagelevelc2"),
-    };
+    resultsetsTemplatename;
 
     /**
      * Create a course list step.
@@ -2086,24 +2466,16 @@ class CouseListStep extends Step {
                 this.updateCourseResults();
             }, 500)(); // Adjust the delay time (in milliseconds) as needed.
         });
-    }
 
-    /**
-     * Check prerequisites for the course list step.
-     * @returns {boolean} A boolean representing whether the prerequisites are met or not.
-     */
-    checkPrerequisites() {
-        return (
-            this.scout.account.getPath() == this.path.name &&
-            Object.keys(this.scout.account.getSkills()).length
-        );
+        this.courselistTemplatename = "courselist-step-courselist";
+        this.resultsetsTemplatename = "courselist-step-results";
     }
 
     /**
      * Prepare template for the course list step.
      */
     async prepareTemplate() {
-        this.partials.filtermenu = await this.filterMenu.getTemplate();
+        this.partials.filtermenu = this.filterMenu.templateName;
 
         this.data = await this.filterMenu.getData();
     }
@@ -2141,9 +2513,8 @@ class CouseListStep extends Step {
         hide(courselistNode, "opacity");
 
         let courselist;
-        const skills = this.scout.account.getSkills();
         this.filterMenu.updateCourseCount(-1);
-        const completedata = this.getTemplateData(skills);
+        const completedata = this.getTemplateData();
 
         completedata.sets.forEach((set) => {
             if (set.skilllabel == skill.label) {
@@ -2155,11 +2526,7 @@ class CouseListStep extends Step {
             results: courselist,
         };
 
-        const response = await fetch(
-            "core51/wisyki/templates/courselist-step-courselist.mustache"
-        );
-        const template = await response.text();
-        const html = Lang.render(template, data);
+        const html = await Lang.render(this.courselistTemplatename, data);
         // Append html.
         while (courselistNode.lastChild) {
             courselistNode.removeChild(courselistNode.lastChild);
@@ -2221,13 +2588,13 @@ class CouseListStep extends Step {
      * @param {Object} courselistNode - The course list node object.
      */
     setupCourseViewAction(courselistNode) {
-        const biewBtns = courselistNode.querySelectorAll(".to-course-btn");
-        biewBtns.forEach((btn) => {
+        const viewBtns = courselistNode.querySelectorAll(".to-course-btn");
+         viewBtns.forEach((btn) => {
             // Mark favourites.
             const courseid = btn.getAttribute("courseid");
 
             btn.addEventListener("click", (event) => {
-                this.scout.account.setSelectedCourse(courseid);
+                this.scout.selectedCourse = courseid;
                 this.scout.update("next");
             });
         });
@@ -2235,16 +2602,20 @@ class CouseListStep extends Step {
 
     /**
      * Get template data for a set of skills.
-     * @param {Object} skills - The skills object.
      * @returns {Object} The template data.
      */
-    getTemplateData(skills) {
+    getTemplateData() {
+        const skills = this.scout.account.getSkills();
         const uniquecourses = new Set();
         const data = {
-            count: this.results.count,
+            count: this.scout.searchResults.count,
             sets: [],
         };
-        this.results.sets.forEach((set) => {
+
+        for (const set of this.scout.searchResults.sets) {
+            if (this.scout.selectedResultset && set.label != this.scout.selectedResultset) {
+                continue;
+            }
             let currentLevelResults = [];
             let label = set.label.replace(/ +\(ESCO\)/, "");
             let currentSkill;
@@ -2258,16 +2629,16 @@ class CouseListStep extends Step {
             } else {
                 for (let skill of Object.values(skills)) {
                     if (skill.label == set.skill.label) {
-                        currentSkill = skill;
+                        currentSkill = Object.assign({}, skill);
                         if (currentSkill.levelGoal === null) {
                             currentSkill.levelGoal = "";
                         }
                     }
                 }
 
-                let levels = [""].concat(Object.values(this.complevelmapping));
+                let levels = [""].concat(Object.values(this.scout.complevelmapping));
                 if (currentSkill.isLanguageSkill) {
-                    levels = [""].concat(Object.values(this.langlevelmapping));
+                    levels = [""].concat(Object.values(this.scout.langlevelmapping));
                 }
                 const filteredResults = this.getFilteredCourselist(
                     set.results,
@@ -2302,7 +2673,7 @@ class CouseListStep extends Step {
             currentLevelResults.forEach((course) => {
                 uniquecourses.add(course.id);
             });
-        });
+        }
 
         data.count = uniquecourses.size;
 
@@ -2310,79 +2681,26 @@ class CouseListStep extends Step {
     }
 
     /**
-     * Get string representation for the count of courses.
-     * @param {number} count - The count of courses.
-     * @returns {string} The string representation of the count.
-     */
-    getKurseCountString(count) {
-        let countstring = count + " " + Lang.getString("courses");
-        if (count == 1) {
-            countstring = count + " " + Lang.getString("course");
-        }
-        return countstring;
-    }
-
-    /**
-     * Get filtered course list based on the level.
-     * @param {Array} courses - The array of courses.
-     * @param {Array} levels - The levels to sort the results by.
-     * @returns {Array} The filtered array of courses.
-     */
-    getFilteredCourselist(courses, levels = null) {
-        const filteredResults = {};
-        if (!levels) {
-            filteredResults[""] = [];
-            courses.forEach((course) => {
-                const newcourse = Object.assign({}, course);
-                newcourse.showLevels = true;
-                filteredResults[""].push(newcourse);
-            });
-        } else {
-            levels.forEach((level) => {
-                filteredResults[level] = [];
-                courses.forEach((course) => {
-                    if (course.levels.includes(level)) {
-                        const newcourse = Object.assign({}, course);
-                        newcourse.showLevels = false;
-                        filteredResults[level].push(newcourse);
-                    } else if (level == "") {
-                        const newcourse = Object.assign({}, course);
-                        newcourse.showLevels = true;
-                        filteredResults[level].push(newcourse);
-                    }
-                });
-            });
-        }
-        return filteredResults;
-    }
-
-    /**
      * Update course results for the course list step.
      */
     async updateCourseResults() {
         // Get course suggestions and set template data.
-        const skills = this.scout.account.getSkills();
-
-        const results = await this.search();
-        if (results) {
-            this.results = results;
+        const newState = this.updateState(); 
+        if (!this.scout.searchResults || newState) {
+            const results = await this.search();
+            if (results) {
+                this.scout.searchResults = results;
+            }
+        } else if (!this.rebuildOnUpdate()) {
+            return;
         }
 
-        const data = this.getTemplateData(skills);
+        const data = this.getTemplateData();
 
         this.filterMenu.updateCourseCount(data.count);
 
-        // Get mustache templates.
-        const [resultsTemplate, courselistTemplate] = await Promise.all([
-            fetch(
-                "core51/wisyki/templates/courselist-step-results.mustache"
-            ).then((response) => response.text()),
-            fetch(
-                "core51/wisyki/templates/courselist-step-courselist.mustache"
-            ).then((response) => response.text()),
-        ]);
-        const html = Lang.render(resultsTemplate, data, {
-            courselist: courselistTemplate,
+        const html = await Lang.render(this.resultsetsTemplatename, data, {
+            courselist: this.courselistTemplatename,
         });
 
         while (this.resultList.lastChild) {
@@ -2420,6 +2738,7 @@ class CouseListStep extends Step {
             "fieldset.complevel-filter"
         );
 
+        const skills = this.scout.account.getSkills();
         complevelFilters.forEach((complevelFilter) => {
             // Add an event listener to each radio button in the group
             const skill = skills[complevelFilter.getAttribute("skilluri")];
@@ -2433,12 +2752,14 @@ class CouseListStep extends Step {
                 this.scout.account.setSkill(
                     skill.label,
                     skill.uri,
+                    skill.levelCurrent,
                     skill.levelGoal,
                     skill.isLanguageSkill,
                     skill.isOccupationSkill,
                     skill.similarSkills
                 );
-
+        
+                this.updateState();
                 this.updateCourseResult(skill, complevelFilter.parentNode);
             });
 
@@ -2454,6 +2775,7 @@ class CouseListStep extends Step {
                 this.scout.account.setSkill(
                     skill.label,
                     skill.uri,
+                    skill.levelCurrent,
                     firstInput.value,
                     skill.isLanguageSkill,
                     skill.isOccupationSkill,
@@ -2461,105 +2783,6 @@ class CouseListStep extends Step {
                 );
             }
         });
-    }
-
-    /**
-     * Search for courses based on the users skill goals.
-     * @returns {Object} The response object containing the search ID and the number of courses found.
-     */
-    async search() {
-        const skills = this.scout.account.getSkills();
-        for (const skill of Object.values(skills)) {
-            let levelGoalID = "";
-            if (skill.isLanguageSkill) {
-                levelGoalID = Object.keys(this.langlevelmapping)[
-                    Object.values(this.langlevelmapping).indexOf(
-                        skill.levelGoal
-                    )
-                ];
-            } else {
-                levelGoalID = Object.keys(this.complevelmapping)[
-                    Object.values(this.complevelmapping).indexOf(
-                        skill.levelGoal
-                    )
-                ];
-            }
-            skill.levelGoalID = levelGoalID;
-        }
-        const params = {
-            skills: JSON.stringify(skills),
-            occupation: JSON.stringify(this.scout.account.getOccupation()),
-            filters: JSON.stringify(this.scout.account.getFilters()),
-        };
-
-        const newState = JSON.stringify(params);
-
-        if (this.lastState == newState) {
-            return;
-        }
-        this.lastState = newState;
-
-        const url = "./scout-search";
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(params),
-        });
-
-        if (response.ok) {
-            const results = await response.json();
-            return this.cleanResults(results);
-        } else {
-            console.error("HTTP-Error: " + response.status);
-        }
-    }
-
-    cleanResults(results) {
-        // Go over every result.
-        for (const setid in results.sets) {
-            const set = results.sets[setid];
-            for (const resultid in set.results) {
-                const result = results.sets[setid].results[resultid];
-                // Translate levels Niveau A, B, C to the level names definded by the language file.
-                if (result.levels.length == 0) {
-                    result.levels = [Lang.getString("courseliststep:na")];
-                } else {
-                    for (const levelid in result.levels) {
-                        const level =
-                            results.sets[setid].results[resultid].levels[
-                                levelid
-                            ];
-                        if (
-                            Object.keys(this.complevelmapping).includes(level)
-                        ) {
-                            results.sets[setid].results[resultid].levels[
-                                levelid
-                            ] = this.complevelmapping[level];
-                        }
-                    }
-                }
-
-                // Get LangString for ai reccomendation reasons.
-                if (results.sets[setid].results[resultid].reason) {
-                    const score = results.sets[setid].results[resultid].score;
-                    const data = {};
-                    if (score) {
-                        data.score = Math.round(score * 100);
-                    }
-                    results.sets[setid].results[resultid].reason =
-                        Mustache.render(
-                            Lang.getString(
-                                results.sets[setid].results[resultid].reason[0]
-                            ),
-                            data
-                        );
-                }
-            }
-        }
-
-        return results;
     }
 
     /**
@@ -2575,7 +2798,7 @@ class CouseListStep extends Step {
  * Class representing a course view step.
  * @extends Step
  */
-class CouseViewStep extends Step {
+class CourseViewStep extends Step {
     /**
      * Represents the last selected course to view.
      * @type {number}
@@ -2599,7 +2822,7 @@ class CouseViewStep extends Step {
     checkPrerequisites() {
         return (
             this.scout.account.getPath() == this.path.name &&
-            this.scout.account.getSelectedCourse()
+            this.scout.selectedCourse
         );
     }
 
@@ -2607,9 +2830,8 @@ class CouseViewStep extends Step {
      * Prepare template for the course list step.
      */
     async prepareTemplate() {
-        this.selectedCourse = this.scout.account.getSelectedCourse();
         // Get html from kurs-renderer-class.
-        const response = await fetch(`/k${this.selectedCourse}?scout`);
+        const response = await fetch(`/scoutk?id=${this.scout.selectedCourse}`);
         // Convert iso-8859-1 to utf-8.
         const buffer = await response.arrayBuffer();
         const decoder = new TextDecoder("iso-8859-1");
@@ -2634,12 +2856,15 @@ class CouseViewStep extends Step {
             delay = true;
         }
         await super.update();
+        this.selectedCourse = this.scout.selectedCourse;
 
         this.updateFavAction();
 
         // Delay return 200ms
         if (delay) {
-            await Promise.resolve(new Promise((resolve) => setTimeout(resolve, 500)));
+            await Promise.resolve(
+                new Promise((resolve) => setTimeout(resolve, 500))
+            );
         }
     }
 
@@ -2649,9 +2874,8 @@ class CouseViewStep extends Step {
      */
     isRendered() {
         return (
-            document.querySelector("#" + this.name + " .step").children
-                .length !== 0 &&
-            this.selectedCourse == this.scout.account.getSelectedCourse()
+            document.querySelector(`#${this.name} .step`).children.length !== 0 &&
+            this.selectedCourse == this.scout.selectedCourse
         );
     }
 
@@ -2664,13 +2888,14 @@ class CouseViewStep extends Step {
     }
 
     setupFavAction() {
-        const btn = this.node.querySelector('.bookmark-btn');
+        const btn = this.node.querySelector(".bookmark-btn");
 
+        const courseid = btn.getAttribute("courseid");
         btn.addEventListener("click", (event) => {
-            if (!fav_is_favourite(this.selectedCourse)) {
-                fav_click(event, this.selectedCourse);
+            if (!fav_is_favourite(courseid)) {
+                fav_click(event, courseid);
             } else {
-                fav_set_favourite(this.selectedCourse, false);
+                fav_set_favourite(courseid, false);
             }
 
             this.updateFavAction();
@@ -2679,18 +2904,15 @@ class CouseViewStep extends Step {
     }
 
     updateFavAction() {
-        console.log('Asd');
         const favBtns = this.node.querySelectorAll(".bookmark-btn");
         favBtns.forEach((btn) => {
             // Mark favourites.
             const courseid = btn.getAttribute("courseid");
             const icon = btn.querySelector("i");
             if (fav_is_favourite(courseid)) {
-                console.log('is fav');
                 icon.classList.remove("star-icon");
                 icon.classList.add("filled-star-icon");
             } else {
-                console.log('is not fav');
                 icon.classList.remove("filled-star-icon");
                 icon.classList.add("star-icon");
             }
@@ -2727,12 +2949,7 @@ class Filter {
      * @returns {Promise} A promise that resolves to the rendered template.
      */
     async render() {
-        const response = await fetch(
-            "core51/wisyki/templates/" + this.name + "-filter.mustache"
-        );
-        const template = await response.text();
-
-        return Lang.render(template);
+        return await Lang.render(this.name + "-filter");
     }
 
     /**
@@ -3121,7 +3338,7 @@ class FilterMenu {
 
     /**
      * Represents the step object associated with the filter menu.
-     * @type {object}
+     * @type {Step}
      */
     step;
 
@@ -3159,6 +3376,8 @@ class FilterMenu {
             new TimeofdayFilter(this),
             new FundingFilter(this),
         ];
+    
+        this.templateName = "courselist-step-filter";
     }
 
     /**
@@ -3180,17 +3399,6 @@ class FilterMenu {
         }
 
         return data;
-    }
-
-    /**
-     * Get the template from a specific URL.
-     * @return {string} The text response from the fetch request.
-     */
-    async getTemplate() {
-        const response = await fetch(
-            "core51/wisyki/templates/courselist-step-filter.mustache"
-        );
-        return await response.text();
     }
 
     /**
@@ -3299,9 +3507,9 @@ class FilterMenu {
         } else {
             hide(this.courseCountLoaderNode);
             show(this.courseCountNode);
-            let text = courseCount + " " + Lang.getString("courses");
+            let text = courseCount + " " + Lang.getString("viewcourses");
             if (courseCount == 1) {
-                text = courseCount + " " + Lang.getString("course");
+                text = courseCount + " " + Lang.getString("viewcourse");
             }
             this.courseCountNode.textContent = text;
         }
@@ -3693,16 +3901,29 @@ class LocationAutocompleter extends Autocompleter {
 class Lang {
     /**
      * Private static property to store language strings.
-     * @private
      * @type {Object}
      */
-    static #langstrings;
+    static langstrings;
     /**
      * Private static property to store the current language code.
-     * @private
      * @type {string}
      */
-    static #langcode;
+    static langcode;
+    /**
+     * Dirname where lang files are stored.
+     * @type {string}
+     */
+    static langFilesDir = "core51/wisyki/lang/";
+    /**
+     * Dirname where template files are stored.
+     * @type {string}
+     */
+    static templatesDir = "core51/wisyki/templates/";
+    /**
+     * Cache for templates.
+     * @type {Object}
+     */
+    static cachedTemplates = {};
 
     /**
      * Initializes the Lang class with the specified language code.
@@ -3711,10 +3932,10 @@ class Lang {
      * @returns {Promise} - A promise that resolves when the initialization is complete.
      */
     static async init(langcode = "de") {
-        Lang.#langcode = langcode;
-        const filepath = "core51/wisyki/lang/" + Lang.#langcode + ".json";
+        Lang.langcode = langcode;
+        const filepath = Lang.langFilesDir + Lang.langcode + ".json";
         const response = await fetch(filepath);
-        Lang.#langstrings = await response.json();
+        Lang.langstrings = await response.json();
     }
 
     /**
@@ -3723,31 +3944,54 @@ class Lang {
      * @returns {string} The language string.
      */
     static getString(key) {
-        if (!Lang.#langstrings.hasOwnProperty(key)) {
+        if (!Lang.langstrings.hasOwnProperty(key)) {
             console.error(
                 'Key "' +
                     key +
                     '" not found in lang file "' +
-                    Lang.#langcode +
+                    Lang.langcode +
                     '"'
             );
             return key;
         }
-        return Lang.#langstrings[key];
+        return Lang.langstrings[key];
+    }
+
+    static async getTemplate(templatename) {
+        if (templatename in Lang.cachedTemplates) {
+            return Lang.cachedTemplates[templatename];
+        }
+        const response = await fetch(`${Lang.templatesDir}${templatename}.mustache`);
+        const template = await response.text();
+        Lang.cachedTemplates[templatename] = template;
+        return template;
     }
 
     /**
      * Renders a Mustache template with the provided view and partials.
-     * @param {string} template - The Mustache template.
+     * @param {string} templatename - The Mustache template.
      * @param {Object} view - The view object.
-     * @param {Object|null} partials - The partials object.
+     * @param {Object|null} partials - The partials object containing teh templatenames of all partials.
      * @param {Object|null} config - The configuration object.
-     * @returns {string} The rendered template.
+     * @returns {Promise<string>} The rendered template.
      */
-    static render(template, view = {}, partials = null, config = null) {
-        view.lang = Lang.#langstrings;
+    static async render(templatename, view = {}, partials = null, config = null) {
+        // Get template files.
+        const template = await Lang.getTemplate(templatename);
+        const partialTemplates = {}
+        if (partials) {
+            for (const [partial, file] of Object.entries(partials)) {
+                try {
+                    const partialTemplate = await Lang.getTemplate(file);
+                    partialTemplates[partial] = partialTemplate;
+                } catch (error) {
+                    console.error(`Error fetching template for '${partial}':`, error);
+                }
+            }
+        }
+        view.lang = Lang.langstrings;
         return Mustache.render(
-            Mustache.render(template, view, partials, config),
+            Mustache.render(template, view, partialTemplates, config),
             view
         );
     }
