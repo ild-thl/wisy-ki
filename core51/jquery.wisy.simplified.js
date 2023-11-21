@@ -1975,11 +1975,19 @@ $(window).load(function () {
 
 $(document).ready(function () {
 
+    $('input').on('keydown', function (e) {
+        // Überprüfen, ob die gedrückte Taste die Enter-Taste ist (key 'Enter')
+        if (e.key === 'Enter') {
+            // Das standardmäßige Verhalten des Formulars unterbinden
+            e.preventDefault();
+        }
+    });
+
     $('.niveauInfo-close').click(function () {
         $('.niveauInfo').css("display", "none");
         $('body').css('overflow-y', 'auto');
     });
-    
+
     $('.wisy-lernform-kategorie input[type="checkbox"]').on('change', function () {
         $('.wisy-lernform-kategorie input[type="checkbox"]').not(this).prop('checked', false);
         $('.wisy-niveau-block').hide();
@@ -2123,18 +2131,17 @@ $(document).ready(function () {
     });
 
 
-// ###########################################################################################################################################
-///VORSCHAU
-
+    /***************************************
+     *****************VORSCHAU***************
+     ****************************************/
     $('#wisy-vorschau').on('click', function (event) {
-        event.preventDefault();
+        //   event.preventDefault();
 
         $('.wisy-vorschau-modal').css('display', 'block');
         $('body').css('overflow-y', 'hidden');
         /*
         Holt die Eingabe Felder für die Vorschau
          */
-
         let kurstitel = $('.wisy-kurs-titel');
         let kursbeschreibung = $('.wisy-kursbeschreibung-text');
         let lernziel = $('.wisy-lernziel-text');
@@ -2145,7 +2152,6 @@ $(document).ready(function () {
         let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
         let abschlussart = $('.abschluss-select');
         let hinweisRedaktion = $('.wisy-nachricht-content input');
-
 
         let vorschautablebody = $('#vorschau-table');
 
@@ -2306,10 +2312,8 @@ $(document).ready(function () {
                 "<td>" + (durchf_preis.length > 0 ? durchf_preis + " EUR" + "<br>" : "") + (durchf_sonderpreis.length > 0 ? "Sonderpreis von " + durchf_sonderpreis + "EUR<br> nur noch " + durchf_sonderpreistage + " Tage <br>" : "") + (durchf_preishinweis.length > 0 ? durchf_preishinweis + "<br>" : "") + (durchf_stunden.length > 0 ? "(" + durchf_stunden + " Std.)" : "") + "</td>" +
                 "<td>" + (durchf_strasse.length > 0 ? durchf_strasse + "<br>" : "") + (durchf_plz.length > 0 ? durchf_plz + " " : "") + (durchf_ort.length > 0 ? durchf_ort + "<br>" : "") + "</td>" +
                 "<td>" + (durchf_teilnehmer.length > 0 ? "max. " + durchf_teilnehmer + " Teilnehmer:innen <br>" : "") + (durchf_bemerkung.length > 0 ? durchf_bemerkung + "<br>" : "") + (durchf_rollstuhl.length > 0 ? durchf_rollstuhl + "<br>" : "") + (durchf_einstieg.length > 0 ? durchf_einstieg + "<br>" : "") + (durchf_url.length > 0 ? " <a target=\"_blank\" href= " + durchf_url + ">zur Anmeldung</a>" + "<br>" : "") + "</td>";
-
             vorschautablebody.find('tbody tr:last').append(tablerow);
         });
-
 
         /*
         platziert die Eingaben in die Vorschau
@@ -2321,26 +2325,34 @@ $(document).ready(function () {
         }
 
         if (kursbeschreibung !== '') {
-            $('.wisy-vorschau-inhalt').text('').text(kursbeschreibung.val());
+            let kValue = kursbeschreibung.val();
+            let formattedText = kValue.replace(/\n/g, '<br>');
+            $('.wisy-vorschau-inhalt').html(formattedText);
             $(this).css('display', 'block');
         } else {
             $('.wisy-vorschau-inhalt').text('').text('Sie haben keine Kursbeschreibung');
         }
 
         if (lernziel !== '') {
-            $('.wisy-vorschau-lernziel').text('').text(lernziel.val());
+            let lzValue = lernziel.val();
+            let formattedText = lzValue.replace(/\n/g, '<br>');
+            $('.wisy-vorschau-lernziel').html(formattedText);
         } else {
             $('.wisy-vorschau-lernziel').text('').text('Sie haben kein Lernziel!');
         }
 
         if (voraussetzung !== '') {
-            $('.wisy-vorschau-voraussetzung').text('').text(voraussetzung.val());
+            let vsValue = voraussetzung.val();
+            let formattedText = vsValue.replace(/\n/g, '<br>');
+            $('.wisy-vorschau-voraussetzung').html(formattedText);
         } else {
             $('.wisy-vorschau-voraussetzung').text('').text('Sie haben keine Voraussetzungen in Ihrem Kurs!');
         }
 
         if (zielgruppe !== '') {
-            $('.wisy-vorschau-zielgruppe').text('').text(zielgruppe.val());
+            let zValue = zielgruppe.val();
+            let formattedText = zValue.replace(/\n/g, '<br>');
+            $('.wisy-vorschau-zielgruppe').html(formattedText);
         } else {
             $('.wisy-vorschau-zielgruppe').text('').text('Sie haben keine Zielgruppe festgelegt!');
         }
@@ -2350,8 +2362,8 @@ $(document).ready(function () {
 
         $('.wisy-vorschau-kursniveau').text('').text(niveaustufe !== undefined ? niveaustufe : 'Keine Angabe');
 
-        if (abschlussart !== '') $('.wisy-vorschau-abschluss').text('').text(abschlussart.val());
-        else $('.wisy-vorschau-abschluss').text('').text('Ihr Kurs hat keinen Abschluss!');
+        /*if (abschlussart !== '') $('.wisy-vorschau-abschluss').text('').text(abschlussart.val());
+        else $('.wisy-vorschau-abschluss').text('').text('Ihr Kurs hat keinen Abschluss!');*/
 
         var ausgewaehlteTexte = "";
 
@@ -2687,7 +2699,7 @@ $(document).ready(function () {
     });
 
 // Überprüfen, ob ein Textfeld aktiviert wurde, bevor eine Checkbox ausgewählt wurde
-    $('textarea, input[type=text], select, .wisy-foerderungen-checkbox, .abschluss-select, .lernform-select, a, small, #wisy-kurseinstieg, .wisy-lernform-kategorie input').on('focus', function () {
+    $('textarea, input[type=text], select, .wisy-foerderungen-checkbox, .abschluss-select, .lernform-select,form[name=kurs] a,form[name=kurs] small,form[name=kurs] span, form[name=kurs] div, #wisy-kurseinstieg, .wisy-lernform-kategorie input').on('focus', function () {
         if (!checkboxSelected && !$(this).hasClass('active')) {
             $('.modal-kategoriebg').css({'display': 'block'});
         } else {
@@ -2696,13 +2708,13 @@ $(document).ready(function () {
     });
 
 // Entfernen Sie die "active"-Klasse, wenn das Textfeld den Fokus verliert
-    $('textarea, input[type=text], select, .wisy-foerderungen-checkbox, .abschluss-select, .lernform-select, a, small, .wisy-lernform-kategorie input').on('blur', function () {
+    $('textarea, input[type=text], select, .wisy-foerderungen-checkbox, .abschluss-select, .lernform-select, form[name=kurs] a,form[name=kurs] small,form[name=kurs] span, form[name=kurs] div, .wisy-lernform-kategorie input').on('blur', function () {
         $(this).removeClass('active');
     });
 
 
     $('.wisy-kategorie-check').on('change', function (event) {
-        event.preventDefault();
+        //  event.preventDefault();
         var url = '/edit?action=kategorie';
         var checkboxValues = {};
         $(this).each(function () {

@@ -274,16 +274,17 @@ class WISY_EDIT_RENDERER_CLASS
         $db->query($sql);
 
         while ($db->next_record()) {
+            $id = $db->fcs8('id');
             $stichwort = $db->fcs8('stichwort');
             if ($stichwort != '')
-                $sql_category[] = $stichwort;
+                $sql_category[$id] = $stichwort;
         }
         $useredit_categoryhelp = $this->framework->iniRead('useredit.kategoriehelp', '');
         $useredit_categoryBK = $this->framework->iniRead('useredit.kategorieBK', '');
         $useredit_categorySK = $this->framework->iniRead('useredit.kategorieSK', '');
         $useredit_categoryAK = $this->framework->iniRead('useredit.kategorieAK', '');
 
-        $useredit_categoriesExample = array($useredit_categoryBK, $useredit_categorySK, $useredit_categoryAK);
+        $useredit_categoriesExample = array('865512' => $useredit_categoryBK, '865522' => $useredit_categorySK, '865532' => $useredit_categoryAK);
 
         echo '<tr>';
         echo '<td valign="top"><strong>Kategorie<span style="color:red">*</span></strong>';
@@ -293,11 +294,13 @@ class WISY_EDIT_RENDERER_CLASS
                 F&uuml;r Kurse, die weder beruflicher noch sprachlicher Bildung zugeordnet werden k&ouml;nnen: Bitte vergeben Sie die Kategorie "Andere".');
         echo '</td><td><div class="wisy-kurstyp">';
 
+
         foreach ($sql_category as $key => $category) {
             echo '<label><input type="checkbox" name="';
             echo strtolower(str_replace(' ', '_', $category)) . '" id="';
             echo strtolower(str_replace(' ', '_', $category)) . '-checkbox" class="wisy-kategorie-check" value="';
-            echo strtolower($category) . '">' . $category;
+            echo strtolower($key) . '">' . $category;
+
             if ($useredit_categoriesExample[$key]) {
                 echo ' <small>' . $useredit_categoriesExample[$key] . '</small>';
             }
@@ -415,9 +418,9 @@ class WISY_EDIT_RENDERER_CLASS
         $checkboxValues = $_POST['checkboxValues'];
         if (isset($checkboxValues)) {
             foreach ($checkboxValues as &$temp) {
-                if ($temp == 'berufliche bildung') $response = $this->createNiveaustufe();
-                if ($temp == 'sprache') $response = $this->sprachniveaus();
-                if ($temp == 'andere') $response = $this->createNiveaustufe();
+                if ($temp == '865512') $response = $this->createNiveaustufe();
+                if ($temp == '865522') $response = $this->sprachniveaus();
+                if ($temp == '865532') $response = $this->createNiveaustufe();
             }
         }
         // Hier können Sie den erhaltenen Daten entsprechend Anweisungen ausführen und die Antwort generieren
@@ -604,46 +607,10 @@ class WISY_EDIT_RENDERER_CLASS
             $stichwid = intval($db->fcs8('id'));
 
             //    $text .= '<span class="wisy-lernform-span"><input class="wisy-lernform-checkbox" type="checkbox" name="useredit_stichwoerter[]" value="' . $stichwid . '"/><label for="' . $stichwid . '">' . $stichwort . '</label><input type="hidden" name="useredit_stichwoerterold[]" value="' . $stichwid . '"/></span><br>';
-            $text .= '<label for="' . $stichwid . '"><input class="wisy-lernform-checkbox" type="checkbox" name="useredit_stichwoerter[]" value="' . $stichwid . '"/>' . $stichwort . '<input type="hidden" name="useredit_stichwoerterold[]" value="' . $stichwid . '"/></label><br>';
+            $text .= '<label for="' . $stichwid . '"><input class="wisy-lernform-checkbox" id="'.$stichwid.'" type="checkbox" name="useredit_stichwoerter[]" value="' . $stichwid . '"/>' . $stichwort . '<input type="hidden" name="useredit_stichwoerterold[]" value="' . $stichwid . '"/></label><br>';
         }
         return $text;
     }
-
-    /*    function getLernformSH()
-        {
-            $db = new DB_Admin;
-            $sql_lernform = array();
-            $sql = "SELECT stichwort FROM stichwoerter WHERE 1 AND eigenschaften = '32768';";
-
-            $db->query($sql);
-
-            while ($db->next_record()) {
-                $stichwort = $db->fcs8('stichwort');
-                if ($stichwort != '') {
-                    if (($stichwort == "Fernunterricht" || $stichwort == "Fernstudium") && !in_array("Fernunterricht, Fernstudium", $sql_lernform)) {
-                        $sql_lernform[] = "Fernunterricht, Fernstudium";
-                    } elseif (($stichwort == "Web-Seminar" || $stichwort == "E-Learning" || $stichwort == "Videotraining") && !in_array("Online", $sql_lernform)) {
-                        $sql_lernform[] = "Online";
-                    } elseif (($stichwort == "Studienreise" || $stichwort == "Exkursion") && !in_array("Exkursion, Studienreise", $sql_lernform)) {
-                        $sql_lernform[] = "Exkursion, Studienreise";
-                    } elseif (($stichwort == "Vortrag" || $stichwort == "Einzelunterricht" || $stichwort == "Präsenzunterricht" || $stichwort == "Diavortrag") && !in_array("Präsenzunterricht", $sql_lernform)) {
-                        $sql_lernform[] = "Pr&auml;senz(-unterricht)";
-                    } elseif ($stichwort == "Hybrid Learning" && !in_array($stichwort, $sql_lernform)) {
-                        $sql_lernform[] = $stichwort;
-                    } elseif ($stichwort == "Blended Learning" && !in_array($stichwort, $sql_lernform)) {
-                        $sql_lernform[] = $stichwort;
-                    } elseif ($stichwort == "Sprachreisen" && !in_array($stichwort, $sql_lernform)) {
-                        $sql_lernform[] = $stichwort;
-                    }
-                }
-            }
-
-            foreach ($sql_lernform as $item) {
-                $var .= "<option>" . $item . "</option>";
-            }
-            return $var;
-        }*/
-
 
     function foerderungen()
     {
@@ -662,12 +629,7 @@ class WISY_EDIT_RENDERER_CLASS
         while ($db->next_record()) {
             $stichwort = $db->fcs8('stichwort');
             $stichwid = intval($db->fcs8('id'));
-            //  if ($stichwid == 1 || $stichwid == 3207) {
-            //    $text .= '<span class="wisy-foerderung-span"><span><input class="wisy-foerderungen-checkbox" type="checkbox" name="useredit_stichwoerter[]" value="' . $stichwid . '"/><label for="' . $stichwid . '">' . $stichwort . '</label><input type="hidden" name="useredit_stichwoerterold[]" value="' . $stichwid . '"/></span><input type="text" class="wisy-foerderung-eingabe" placeholder="' . ($stichwid == 1 ? 'Bildungsurlaub Nummer' : 'AZAV-Zertifikatnummer') . ' eintragen" name="' . $stichwort . '"></span><br>';
-
-            //  } else {
-            $text .= '<span class="wisy-foerderung-span"><input class="wisy-foerderungen-checkbox" type="checkbox" name="useredit_stichwoerter[]" value="' . $stichwid . '"/><label for="' . $stichwid . '">' . $stichwort . '</label><input type="hidden" name="useredit_stichwoerterold[]" value="' . $stichwid . '"/></span><br>';
-            //   }
+            $text .= '<span class="wisy-foerderung-span"><input id="'.$stichwid.'" class="wisy-foerderungen-checkbox" type="checkbox" name="useredit_stichwoerter[]" value="' . $stichwid . '"/><label for="' . $stichwid . '">' . $stichwort . '</label><input type="hidden" name="useredit_stichwoerterold[]" value="' . $stichwid . '"/></span><br>';
         }
         return $text;
     }
@@ -3358,49 +3320,51 @@ Sollte ein F&ouml;rderprogramm fehlen, k&ouml;nnen Sie der Redaktion einen Hinwe
            echo '<input class="wisy-vorschau" style="background-color: rgba(0,0,0,0.1); color: black;" type="submit" name="cancel" value="Abbruch" title="&Auml;nderungen verwerfen und Kurs nicht speichern" />' . "\n";*/
 
         echo '<div class="niveauInfo wisy-vorschau-modal">';
-        echo '<div id="wisy-vorschau-area" class="wisy-vorschau-area">Vorschau Kurs<span class="niveauInfo-close">&times;</span>';
+        echo '<div id="wisy-vorschau-area" class="wisy-vorschau-area"><h1 style="float: left">Kurs-Vorschau</h1><span class="niveauInfo-close">&times;</span>';
         echo '<div class="wisy-vorschau-content"><table class="wisy-vorschau-table">';
 
         echo '<thead><tr>';
-        echo '<th style="font-weight: bold; text-align: left">Kurstitel</th></tr></thead>';
+        echo '<th style="font-weight: bold; text-align: left; font-size: 20px">Kurstitel</th></tr></thead>';
         echo '<thead><tr>';
         echo '<tbody><tr><td><div class="wisy-vorschau-kurstitel">Sie haben keinen Kurstitel hinzugef&uuml;gt!</div></td></tr></tbody>';
 
-        echo '<th style="font-weight: bold; text-align: left">Inhalt</th></tr></thead>';
+        echo '<th style="font-weight: bold; text-align: left; font-size: 20px">Inhalt</th></tr></thead>';
         echo '<tbody><tr><td><div class="wisy-vorschau-inhalt">Sie haben keine Kursbeschreibung hinzugef&uuml;gt!</div></td></tr></tbody>';
         //  echo '</tr>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Lernziel</th></tr></thead>';
+        echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Lernziel</th></tr></thead>';
         echo '<tbody><tr><td><div class="wisy-vorschau-lernziel">Sie haben kein Lernziel hinzugef&uuml;gt!</div></td></tr></tbody>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Voraussetzungen</th></tr></thead>';
+        echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Voraussetzungen</th></tr></thead>';
         echo '<tbody><tr><td><div class="wisy-vorschau-voraussetzung">Sie haben keine Voraussetzung hinzugef&uuml;gt!</div></td></tr></tbody>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Zielgruppe</th></tr></thead>';
+        echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Zielgruppe</th></tr></thead>';
         echo '<tbody><tr><td><div class="wisy-vorschau-zielgruppe">Sie haben keine Zielgruppe hinzugef&uuml;gt!</div></td></tr></tbody>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Thema</th></tr></thead>';
-        echo '<tbody><tr><td><div class="wisy-vorschau-thema">Sie haben kein Thema hinzugef&uuml;gt!</div></td></tr></tbody>';
+        if ($useredit_courseTopicStatus) {
+            echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Thema</th></tr></thead>';
+            echo '<tbody><tr><td><div class="wisy-vorschau-thema">Sie haben kein Thema hinzugef&uuml;gt!</div></td></tr></tbody>';
+        }
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Kursniveau</th></tr></thead>';
+        echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Kursniveau</th></tr></thead>';
         echo '<tbody><tr><td><div class="wisy-vorschau-kursniveau">Sie haben kein Kursniveau hinzugef&uuml;gt!</div></td></tr></tbody>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Abschluss</th></tr></thead>';
-        echo '<tbody><tr><td><div class="wisy-vorschau-abschluss">Ihr Kurs hat keinen Abschluss!</div></td></tr></tbody>';
+   //     echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Abschluss</th></tr></thead>';
+   //     echo '<tbody><tr><td><div class="wisy-vorschau-abschluss">Ihr Kurs hat keinen Abschluss!</div></td></tr></tbody>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Lernform</th></tr></thead>';
+        echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Lernform</th></tr></thead>';
         echo '<tbody><tr><td><div class="wisy-vorschau-lernform">Sie haben keine Lernform hinzugef&uuml;gt!</div></td></tr></tbody>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">F&ouml;rderprogramme</th></tr></thead>';
+        echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">F&ouml;rderprogramme</th></tr></thead>';
         echo '<tbody><tr><td><div class="wisy-vorschau-foerderung">Ihr Kurs hat keine F&ouml;rderprogramme!</div></td></tr></tbody>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Stichwortvorschl&auml;ge</th></tr></thead>';
+        echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Stichwortvorschl&auml;ge</th></tr></thead>';
         echo '<tbody><tr><td><div class="wisy-vorschau-stichwort">Ihr Kurs hat keine F&ouml;rderungen!</div></td></tr></tbody>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Hinweise an die Redaktion</th></tr></thead>';
+        echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Hinweise an die Redaktion</th></tr></thead>';
         echo '<tbody><tr><td><div class="wisy-vorschau-nachricht"></div></td></tr></tbody>';
 
-        echo '<thead><tr><th style="font-weight: bold; text-align: left">Durchf&uuml;hrung</th></tr></thead>';
+        echo '<thead><tr><th style="font-weight: bold; text-align: left; font-size: 20px">Durchf&uuml;hrung</th></tr></thead>';
         echo '<tr><td><div class="wisy-vorschau-durchfuehrung">';
 
         echo '<table id="vorschau-table" style="border: 1px solid black; width: 100%">';
