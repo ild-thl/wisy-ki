@@ -1970,10 +1970,11 @@ $(window).load(function () {
 
 
 /*****************************************************************************
- * Anbietermaske Niveaustufen
+ ******************************* Anbietermaske *******************************
  *****************************************************************************/
 
 $(document).ready(function () {
+
 
     $('input').on('keydown', function (e) {
         // Überprüfen, ob die gedrückte Taste die Enter-Taste ist (key 'Enter')
@@ -2011,6 +2012,7 @@ $(document).ready(function () {
     let lernzieltext = $('.wisy-lernziel-text');
     let kurstiteltext = $('.wisy-kurs-titel');
     let kursbeschreibung = $('.wisy-kursbeschreibung-text');
+
 
     // Event-Listener hinzufügen
     kursbeschreibung.on('blur', function () {
@@ -2131,11 +2133,14 @@ $(document).ready(function () {
     });
 
 
+
+
+
     /***************************************
      *****************VORSCHAU***************
      ****************************************/
     $('#wisy-vorschau').on('click', function (event) {
-        //   event.preventDefault();
+        event.preventDefault();
 
         $('.wisy-vorschau-modal').css('display', 'block');
         $('body').css('overflow-y', 'hidden');
@@ -2150,6 +2155,7 @@ $(document).ready(function () {
         let themaHauptkategorie = $('.wisy-select-hauptkategorie option:selected');
         let themaUnterkategorie = $('.wisy-select-unterkategorie option:selected');
         let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
+        let sprachstufe = $('.wisy-sprachstufen-check');
         let abschlussart = $('.abschluss-select');
         let hinweisRedaktion = $('.wisy-nachricht-content input');
 
@@ -2360,8 +2366,27 @@ $(document).ready(function () {
         if (themaHauptkategorie !== '' && themaUnterkategorie !== '')
             $('.wisy-vorschau-thema').html(themaUnterkategorie.text());
 
-        $('.wisy-vorschau-kursniveau').text('').text(niveaustufe !== undefined ? niveaustufe : 'Keine Angabe');
 
+        $('.wisy-vorschau-kursniveau').text('').text(niveaustufe !== undefined && checkedStufen.length<=0 ? niveaustufe : checkedStufen);
+       // $('.wisy-vorschau-kursniveau').text('').text(sprachstufe !== undefined && niveaustufe == undefined ? sprachstufe : niveaustufe);
+
+        // Leere das Array, um sicherzustellen, dass es keine alten Werte enthält
+        var checkedStufen = [];
+
+        // Iteriere über alle Checkboxen mit der Klasse "wisy-sprachstufen-check"
+        $('.wisy-sprachstufen-check:checked').each(function() {
+            // Füge den Wert (value) der geprüften Checkbox zum Array hinzu
+            checkedStufen.push($(this).val());
+        });
+
+
+        for (var key in checkedStufen) {
+            if (checkedStufen.hasOwnProperty(key)) {
+                // key ist der Name der Eigenschaft (z.B., "A1", "A2", usw.)
+                // checkedStufen[key] gibt den Wert der Eigenschaft (true) an
+                console.log("Schlüssel:", key, "Wert:", checkedStufen[key]);
+            }
+        }
         /*if (abschlussart !== '') $('.wisy-vorschau-abschluss').text('').text(abschlussart.val());
         else $('.wisy-vorschau-abschluss').text('').text('Ihr Kurs hat keinen Abschluss!');*/
 
@@ -2384,8 +2409,9 @@ $(document).ready(function () {
             $('.wisy-vorschau-foerderung').text(ausgewaehlteTexte);
         });
 
-        $('.wisy-vorschau-stichwort').text('').text(selectedValues.length > 0 ? selectedValues : '');
+        $('.wisy-vorschau-stichwort').text('').text(Object.keys(selectedValues).length > 0 ? Object.keys(selectedValues).join(', ') : '');
         $('.wisy-vorschau-nachricht').text('').text(hinweisRedaktion !== '' ? hinweisRedaktion.val() : '');
+
     });
 
 //Kompetenzen manuell einfuegen
@@ -2570,103 +2596,116 @@ $(document).ready(function () {
     });
 
     $('#wisy-esco-gen').on('click', function () {
-        $('#loadingModal').css('display', 'block');
-        let courseDescription = $('.wisy-kursbeschreibung-text');
-        let learninggoal = $('.wisy-lernziel-text');
-        let courseValue = '';
-        let url = '/edit?action=generateescokompentenz';
 
-        if (learninggoal.val().length > courseDescription.val().length || learninggoal.val().length > 30 || courseDescription.val().length === 0) {
-            courseValue = learninggoal.val();
+        if (kursbeschreibung.val() == '' && lernzieltext.val() == '') {
+            $('.wisy-esco-modal-content p').text('').text('Bitte tragen Sie erst in Ihr Kursbeschreibungs- oder Lernzielfeld Ihren Kursinhalt ein.')
+            $('#loadingModal').css('display', 'block');
+
+            // Schließen Sie das Modal nach 3 Sekunden
+            setTimeout(function () {
+                $('#loadingModal').css('display', 'none');
+            }, 3000);
         } else {
-            courseValue = courseDescription.val();
-        }
-        // Überprüfen Sie, ob das Element ausgewählt wurde
-        if (courseValue.length > 0) {
-            // Holen Sie den Textinhalt des ausgewählten Elements
-            let courseVal = courseValue;
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: {kursbeschreibung: courseVal},
-                success: function (response) {
-                    // Verstecke das erweiterte Lade-Modal
-                    $('#loadingModal').css('display', 'none');
-                    // Den Text in einzelne Teile aufteilen, getrennt durch ','
-                    let skills = response.split(' | ');
+
+            $('.wisy-esco-modal-content p').text('').text('Kompetenzen werden generiert, dies kann etwas dauern...')
+            $('#loadingModal').css('display', 'block');
+            let courseDescription = $('.wisy-kursbeschreibung-text');
+            let learninggoal = $('.wisy-lernziel-text');
+            let courseValue = '';
+            let url = '/edit?action=generateescokompentenz';
+
+            if (learninggoal.val().length > courseDescription.val().length || learninggoal.val().length > 30 || courseDescription.val().length === 0) {
+                courseValue = learninggoal.val();
+            } else {
+                courseValue = courseDescription.val();
+            }
+            // Überprüfen Sie, ob das Element ausgewählt wurde
+            if (courseValue.length > 0) {
+                // Holen Sie den Textinhalt des ausgewählten Elements
+                let courseVal = courseValue;
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {kursbeschreibung: courseVal},
+                    success: function (response) {
+                        // Verstecke das erweiterte Lade-Modal
+                        $('#loadingModal').css('display', 'none');
+                        // Den Text in einzelne Teile aufteilen, getrennt durch ','
+                        let skills = response.split(' | ');
 // Das Container-Element auswählen, in dem die span-Elemente erstellt werden sollen
-                    let container = $('.stichwort-area'); // Hier musst du "#container" mit dem tatsächlichen ID- oder Selektor-Wert ersetzen
+                        let container = $('.stichwort-area'); // Hier musst du "#container" mit dem tatsächlichen ID- oder Selektor-Wert ersetzen
 // Schleife durch die Fähigkeiten
-                    for (let i = 0; i < skills.length; i += 2) {
-                        // Extrahiere den Text und die URL
-                        let skillText = skills[i].trim();
-                        let skillURL = skills[i + 1].trim();
+                        for (let i = 0; i < skills.length; i += 2) {
+                            // Extrahiere den Text und die URL
+                            let skillText = skills[i].trim();
+                            let skillURL = skills[i + 1].trim();
 
-                        if (!Object.keys(selectedValues).includes(skillText)) {
-                            selectedValues[skillText] = skillURL;
-                            var closeButton = $('<button>', {
-                                text: 'x',
-                                class: 'close-button',
-                                css: {
-                                    backgroundColor: 'red',
-                                    color: 'white',
-                                    borderRadius: '50%',
-                                    border: 'none',
-                                    width: '20px',
-                                    height: '20px',
-                                    position: 'absolute',
-                                    top: '-10px',
-                                    right: '-10px',
-                                    cursor: 'pointer'
-                                },
-                                click: function () {
-                                    // Entferne das übergeordnete Element (escoKomp)
-                                    var selectedword = $(this).parent().text().trim();
-                                    selectedword = selectedword.slice(0, -1);
-                                    // Prüfen, ob der Schlüssel (selectedword) im Objekt (selectedValues) existiert
-                                    if (selectedValues[selectedword] !== undefined) {
-                                        delete selectedValues[selectedword]; // Schlüssel-Wert-Paar entfernen
+                            if (!Object.keys(selectedValues).includes(skillText)) {
+                                selectedValues[skillText] = skillURL;
+                                var closeButton = $('<button>', {
+                                    text: 'x',
+                                    class: 'close-button',
+                                    css: {
+                                        backgroundColor: 'red',
+                                        color: 'white',
+                                        borderRadius: '50%',
+                                        border: 'none',
+                                        width: '20px',
+                                        height: '20px',
+                                        position: 'absolute',
+                                        top: '-10px',
+                                        right: '-10px',
+                                        cursor: 'pointer'
+                                    },
+                                    click: function () {
+                                        // Entferne das übergeordnete Element (escoKomp)
+                                        var selectedword = $(this).parent().text().trim();
+                                        selectedword = selectedword.slice(0, -1);
+                                        // Prüfen, ob der Schlüssel (selectedword) im Objekt (selectedValues) existiert
+                                        if (selectedValues[selectedword] !== undefined) {
+                                            delete selectedValues[selectedword]; // Schlüssel-Wert-Paar entfernen
+                                        }
+                                        $(this).parent().remove();
+                                        console.log(selectedValues);
+                                    },
+                                    mouseenter: function () {
+                                        $(this).css('background-color', 'darkred');
+                                    },
+                                    mouseleave: function () {
+                                        $(this).css('background-color', 'red');
                                     }
-                                    $(this).parent().remove();
-                                    console.log(selectedValues);
-                                },
-                                mouseenter: function () {
-                                    $(this).css('background-color', 'darkred');
-                                },
-                                mouseleave: function () {
-                                    $(this).css('background-color', 'red');
-                                }
-                            });
-                            var escoKomp = $('<span>', {
-                                text: skillText,
-                                class: "esco-komp",
-                                css: {
-                                    backgroundColor: '#24adf6',
-                                    fontSize: '14px',
-                                    color: 'black',
-                                    border: '1px solid black',
-                                    padding: '5px 10px',
-                                    position: 'relative',
-                                    margin: '5px'
-                                }
-                            });
-                            //Hier weisen wir die URI als data-value zu
-                            escoKomp.attr('data-value', skillURL);
+                                });
+                                var escoKomp = $('<span>', {
+                                    text: skillText,
+                                    class: "esco-komp",
+                                    css: {
+                                        backgroundColor: '#24adf6',
+                                        fontSize: '14px',
+                                        color: 'black',
+                                        border: '1px solid black',
+                                        padding: '5px 10px',
+                                        position: 'relative',
+                                        margin: '5px'
+                                    }
+                                });
+                                //Hier weisen wir die URI als data-value zu
+                                escoKomp.attr('data-value', skillURL);
 // Füge das closeButton-Element zum escoKomp-Element hinzu
-                            escoKomp.append(closeButton);
-                            // Füge das span-Element dem Container hinzu
-                            container.append(escoKomp);
+                                escoKomp.append(closeButton);
+                                // Füge das span-Element dem Container hinzu
+                                container.append(escoKomp);
+                            }
                         }
+                    },
+                    error: function () {
+                        // Verstecke das erweiterte Lade-Modal
+                        $('#loadingModal').css('display', 'none');
+                        console.log('FEHLER: Beim Empfangen der generierten Esco Kompetenzen, ist ein Problem entstanden.');
                     }
-                },
-                error: function () {
-                    // Verstecke das erweiterte Lade-Modal
-                    $('#loadingModal').css('display', 'none');
-                    console.log('FEHLER: Beim Empfangen der generierten Esco Kompetenzen, ist ein Problem entstanden.');
-                }
-            });
-        } else {
-            console.log('Das Element mit der Klasse ' + courseDescription.length + ' wurde nicht gefunden. ' + learninggoal.length);
+                });
+            } else {
+                console.log('Das Element mit der Klasse ' + courseDescription.length + ' wurde nicht gefunden. ' + learninggoal.length);
+            }
         }
     });
 
@@ -2686,6 +2725,7 @@ $(document).ready(function () {
                 $('.stichwort-area').html('fehler');
             }
         });
+
     });
 
 // Überprüfen, ob eine Checkbox ausgewählt wurde, bevor ein Textfeld aktiviert wird
@@ -2714,7 +2754,7 @@ $(document).ready(function () {
 
 
     $('.wisy-kategorie-check').on('change', function (event) {
-        //  event.preventDefault();
+        event.preventDefault();
         var url = '/edit?action=kategorie';
         var checkboxValues = {};
         $(this).each(function () {
@@ -2727,12 +2767,6 @@ $(document).ready(function () {
             data: {checkboxValues: checkboxValues},
             success: function (response) {
                 $('.niveau-stufen').html(response);
-
-                /*  if ($('#andere-checkbox').prop('checked') === true) {
-                      $('.wisy-kursniveau-cell').css({'display': 'block'});
-                  } else {
-                      $('.wisy-kursniveau-cell').css({'display': 'none'});
-                  }*/
 
                 if ($('#berufliche_bildung-checkbox').prop('checked') === true || $('#sprache-checkbox').prop('checked') === true) {
                     $('.wisy-kursniveau-cell').css({'display': 'block'});
@@ -2756,7 +2790,6 @@ $(document).ready(function () {
                 $('.niv-infoC').click(function () {
                     $('.niveauInfo-c').css("display", "block");
                 });
-
 
                 $('.niveauInfo-close').click(function () {
                     $('.niveauInfo').css("display", "none");
@@ -2788,6 +2821,7 @@ $(document).ready(function () {
         let themaHauptkategorie = $('.wisy-select-hauptkategorie option:selected').text();
         let themaUnterkategorie = $('.wisy-select-unterkategorie option:selected').text();
         let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
+        let sprachstufe = $('.wisy-sprachstufen-check:checked').val();
         let abschlussart = $('.abschluss-select').val();
         //  let lernform = $('.lernform-select').val(); ALT
         let hinweisRedaktion = $('.wisy-nachricht-content input').val();
@@ -2907,7 +2941,7 @@ $(document).ready(function () {
                 'zielgruppe': zielgruppe,
                 'themaHauptkategorie': themaHauptkategorie,
                 'themaUnterkategorie': themaUnterkategorie,
-                'niveaustufe': niveaustufe,
+                'niveaustufe': niveaustufe == undefined ? sprachstufe : niveaustufe,
                 'abschlussart': abschlussart,
                 'lernform': lernform,
                 'foerderungen': ausgewaehlteTexte,
@@ -2985,32 +3019,6 @@ function updateAccordion(sectionId, checkboxId, imageId) {
     }
 }
 
-/*
-
-function escoparams(text, language, type, full, alt, limit) {
-    var str = new URLSearchParams({
-        text: text,
-        language: language,
-        type: type,
-        full: full,
-        alt: alt,
-        limit: limit
-    });
-
-   // if old cookie banner is active: set cookie immediately that msg has been viewed for 3 days
-   jQuery(".hover_bkgr_fricc .popupCloseButton").click(function() {
-     if(jQuery(".cc-consent-details li").length > 0 )
-       ;
-     else {
-      setCookieSafely('cconsent_popuptext', "allow", { expires:3});
-     }
-   });
-
-   // Hide load / wait message after page has actually completed loading (esp. fulltext)
-   if(jQuery(".laden").length)
-    jQuery(".laden").remove();
-
- });
 
 /***********************************************
  * viewport size

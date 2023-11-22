@@ -1986,7 +1986,7 @@ class WISY_EDIT_RENDERER_CLASS
         else echo '<div class="niv-titel-header nivB-titel"><span class="nivB-titel niv-titel">Fortgeschrittenenstufe</span>';
         echo '<div class="niv-info niv-infoB"><p class="niv-info-help">?</p></div></div>';
         //echo '<p class="niv-txt niv-text-b"> Die Teilnehmenden erlangen Kompetenzen zur &uuml;berwiegend selbstst&auml;ndigen Umsetzung erweiterter Aufgaben in einem sich teilweise ver&auml;ndernden Bereich.</p>';
-        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox"class="wisy-niveaustufen-check" value="Aufbaustufe"><div class="slider round"></div></label></div>';
+        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox"class="wisy-niveaustufen-check" value="Fortgeschrittenenstufe"><div class="slider round"></div></label></div>';
         if ($useredit_recommendationtxt) echo '<p class="niv-text">' . $useredit_recommendationtxt . '</p>';
         else echo '<p class="niv-text with-icon">Anhand Ihrer Kursbeschreibung empfehlen wir Ihnen diese Stufe.</p>';
         echo '</div>';
@@ -1996,7 +1996,7 @@ class WISY_EDIT_RENDERER_CLASS
         if ($useredit_niveauC) echo '<div class="niv-titel-header nivC-titel"><span class="nivC-titel niv-titel">' . $useredit_niveauC . '</span>';
         else echo '<div class="niv-titel-header nivC-titel"><span class="nivC-titel niv-titel">Expert*innenstufe</span>';
         echo '<div class="niv-info niv-infoC"><p class="niv-info-help">?</p></div></div>';
-        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox"class="wisy-niveaustufen-check" value="Fortgeschrittenenstufe"><div class="slider round"></div></label></div>';
+        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox"class="wisy-niveaustufen-check" value="Expert*innenstufe"><div class="slider round"></div></label></div>';
         if ($useredit_recommendationtxt) echo '<p class="niv-text">' . $useredit_recommendationtxt . '</p>';
         else echo '<p class="niv-text with-icon">Anhand Ihrer Kursbeschreibung empfehlen wir Ihnen diese Stufe.</p>';
         echo '</div>';
@@ -2037,7 +2037,7 @@ class WISY_EDIT_RENDERER_CLASS
         if ($useredit_niveauA_infoF) echo '<p class="nivA-info-f-fertigkeiten">' . $useredit_niveauA_infoF . '</p>';
         else echo '<p class="nivA-info-f-fertigkeiten">&Uuml;ber kognitive und praktische F&auml;higkeiten verf&uuml;gen, zur Ausf&uuml;hrung einfacher Aufgaben nach vorgegebenen Ma&szlig;st&auml;ben wiedergeben, beurteilen und elementare Zusammenh&auml;nge herstellen.</p>';
         echo '<br><h3>Personale Kompetenz</h3>';
-        if ($useredit_niveauA_infoW) echo '<p class="nivA-info-f-kompetenz">' . $useredit_niveauA_infoW . '</p>';
+        if ($useredit_niveauA_infoP) echo '<p class="nivA-info-f-kompetenz">' . $useredit_niveauA_infoP . '</p>';
         else echo '<p class="nivA-info-f-kompetenz">Mit anderen in einer Gruppe zusammen lernen, diese wahrnehmen. Sich beteiligen, Kritik aufnehmen und &auml;u&szlig;ern. Das eigene Handeln und das anderer einsch&auml;tzen. Lernberatung oder Lernhilfen nutzen.</p>';
         echo '</div>';
         echo '</div>';
@@ -2084,7 +2084,7 @@ class WISY_EDIT_RENDERER_CLASS
         echo '<div class="niv-titel-header sprachena-titel"><span class="sprache-a-titel sprach-titel">A1</span>';
         echo '</div>';
         //echo '<p class="niv-txt niv-text-a">Die Teilnehmenden k&ouml;nnen ganz einfache S&auml;tze verstehen und verwenden.</p>';
-        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-niveaustufen-check"><div class="slider round"></div></label></div>';
+        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-sprachstufen-check" value="A1"><div class="slider round"></div></label></div>';
         // echo '<p class="niv-text">Anhand Ihrer Kursbeschreibung empfehlen wir Ihnen diese Stufe.</p>';
         echo '</div>';
 
@@ -2092,7 +2092,7 @@ class WISY_EDIT_RENDERER_CLASS
         echo '<div class="niv-titel-header sprachena-titel"><span class="sprache-a-titel sprach-titel">A2</span>';
         echo '</div>';
         // echo '<p class="niv-txt niv-text-a">Die Teilnehmenden k&ouml;nnen elementare S&auml;tze und h&auml;ufig gebrauchte Ausdr&uuml;cke verstehen und verwenden.</p>';
-        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-niveaustufen-check"><div class="slider round"></div></label></div>';
+        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-sprachstufen-check" value="A2"><div class="slider round"></div></label></div>';
         //  echo '<p class="niv-text">Anhand Ihrer Kursbeschreibung empfehlen wir Ihnen diese Stufe.</p>';
         echo '</div>';
 
@@ -2100,7 +2100,7 @@ class WISY_EDIT_RENDERER_CLASS
         echo '<div class="niv-titel-header sprachenb-titel"><span class="sprache-b-titel sprach-titel">B1</span>';
         echo '</div>';
         //  echo '<p class="niv-txt niv-text-a">Die Teilnehmenden k&ouml;nnen klare Standardsprache verstehen und verwenden.</p>';
-        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-niveaustufen-check"><div class="slider round"></div></label></div>';
+        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-sprachstufen-check" value="B1"><div class="slider round"></div></label></div>';
         //  echo '<p class="niv-text">Anhand Ihrer Kursbeschreibung empfehlen wir Ihnen diese Stufe.</p>';
         echo '</div>';
 
@@ -2108,7 +2108,7 @@ class WISY_EDIT_RENDERER_CLASS
         echo '<div class="niv-titel-header sprachenb-titel"><span class="sprache-b-titel sprach-titel">B2</span>';
         echo '</div>';
         //  echo '<p class="niv-txt niv-text-a">Die Teilnehmenden k&ouml;nnen die Sprache selbstst&auml;ndig in einem breiten Themensprektrum verwenden.</p>';
-        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-niveaustufen-check"><div class="slider round"></div></label></div>';
+        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-sprachstufen-check" value="B2"><div class="slider round"></div></label></div>';
         //   echo '<p class="niv-text">Anhand Ihrer Kursbeschreibung empfehlen wir Ihnen diese Stufe.</p>';
         echo '</div>';
 
@@ -2116,7 +2116,7 @@ class WISY_EDIT_RENDERER_CLASS
         echo '<div class="niv-titel-header sprachenc-titel"><span class="sprache-c-titel sprach-titel">C1</span>';
         echo '</div>';
         // echo '<p class="niv-txt niv-text-a">Die Teilnehmenden k&ouml;nnen anspruchvolle Texte verstehen und spontan, flie&szlig;end, strukturiert kommunizieren.</p>';
-        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-niveaustufen-check"><div class="slider round"></div></label></div>';
+        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-sprachstufen-check" value="C1"><div class="slider round"></div></label></div>';
         //   echo '<p class="niv-text">Anhand Ihrer Kursbeschreibung empfehlen wir Ihnen diese Stufe.</p>';
         echo '</div>';
 
@@ -2124,7 +2124,7 @@ class WISY_EDIT_RENDERER_CLASS
         echo '<div class="niv-titel-header sprachenc-titel"><span class="sprache-c-titel sprach-titel">C2</span>';
         echo '</div>';
         //  echo '<p class="niv-txt niv-text-a">Die Teilnehmenden k&ouml;nnen alles m&uuml;helos verstehen und fließend kommunizieren.</p>';
-        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-niveaustufen-check"><div class="slider round"></div></label></div>';
+        echo '<div class="niv-slider-menu"><p>Stufe ausw&auml;hlen</p><label class="switch"><input type="checkbox" id="checkbox" class="wisy-sprachstufen-check" value="C2"><div class="slider round"></div></label></div>';
         //    echo '<p class="niv-text">Anhand Ihrer Kursbeschreibung empfehlen wir Ihnen diese Stufe.</p>';
         echo '</div>';
 
@@ -2436,7 +2436,6 @@ class WISY_EDIT_RENDERER_CLASS
             ############################################################################################################
 
             // Voraussetzungen
-
             $useredit_courseRequirementhelp = $this->framework->iniRead('useredit.courseRequirementhelp', '');
             $useredit_courseRequirementPH = $this->framework->iniRead('useredit.courseRequirementExample', '');
 
@@ -2455,7 +2454,6 @@ class WISY_EDIT_RENDERER_CLASS
             ############################################################################################################
 
             // ZIELGRUPPE
-
             $useredit_courseTargetgrouphelp = $this->framework->iniRead('useredit.courseTargetgrouphelp', '');
             $useredit_courseTargetgroupPH = $this->framework->iniRead('useredit.courseTargetgroupExample', '');
 
@@ -2473,7 +2471,6 @@ class WISY_EDIT_RENDERER_CLASS
             ############################################################################################################
 
             // THEMA
-
             $useredit_courseTopichelp = $this->framework->iniRead('useredit.courseTopichelp', '');
             $useredit_courseTopicQuestion = $this->framework->iniRead('useredit.courseTopicQuestion', '');
             $useredit_courseMainTopicQuestion = $this->framework->iniRead('useredit.courseMainTopicQuestion', '');
