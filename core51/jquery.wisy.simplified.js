@@ -1976,7 +1976,7 @@ $(window).load(function () {
 $(document).ready(function () {
 
 
-    $('input').on('keydown', function (e) {
+    $('form[name="kurs"] input').on('keydown', function (e) {
         // Überprüfen, ob die gedrückte Taste die Enter-Taste ist (key 'Enter')
         if (e.key === 'Enter') {
             // Das standardmäßige Verhalten des Formulars unterbinden
@@ -2133,286 +2133,6 @@ $(document).ready(function () {
     });
 
 
-
-
-
-    /***************************************
-     *****************VORSCHAU***************
-     ****************************************/
-    $('#wisy-vorschau').on('click', function (event) {
-        event.preventDefault();
-
-        $('.wisy-vorschau-modal').css('display', 'block');
-        $('body').css('overflow-y', 'hidden');
-        /*
-        Holt die Eingabe Felder für die Vorschau
-         */
-        let kurstitel = $('.wisy-kurs-titel');
-        let kursbeschreibung = $('.wisy-kursbeschreibung-text');
-        let lernziel = $('.wisy-lernziel-text');
-        let voraussetzung = $('.wisy-voraussetzung-text');
-        let zielgruppe = $('.wisy-zielgruppe-text');
-        let themaHauptkategorie = $('.wisy-select-hauptkategorie option:selected');
-        let themaUnterkategorie = $('.wisy-select-unterkategorie option:selected');
-        let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
-        let sprachstufe = $('.wisy-sprachstufen-check');
-        let abschlussart = $('.abschluss-select');
-        let hinweisRedaktion = $('.wisy-nachricht-content input');
-
-        let vorschautablebody = $('#vorschau-table');
-
-        vorschautablebody.find('tbody').empty(); // leert vorherige Einträge
-
-        // Geben Sie den Text zur Überprüfung auf der Konsole aus
-        $('.wisy-vorschau-lernform').text('').text(lernform);
-
-        /***
-         * Durchfuehrungsnummer des Kurses
-         */
-        $('input[name="nr[]"]').each(function (index) {
-            let durchf_nr = $(this).val();
-            let tablerowNR = "<tr><td>" + durchf_nr + "</td>";
-            vorschautablebody.find('tbody').append(tablerowNR);
-
-            /***
-             * Dauer des Kurses (Datum)
-             * @type {*|string|jQuery}
-             */
-            let durchf_terminBeginn = $('input[name="beginn[]"]').eq(index).val();
-            let durchf_terminEnde = $('input[name="ende[]"]').eq(index).val();
-
-            /***
-             * Wochentage der Durchfuehrungstage
-             * @type {string}
-             */
-            let durchf_kurstageMo = $('input[name="kurstage0[]"]').eq(index).val() > 0 ? 'Mo ' : '';
-            let durchf_kurstageDi = $('input[name="kurstage2[]"]').eq(index).val() > 0 ? 'Di ' : '';
-            let durchf_kurstageMi = $('input[name="kurstage4[]"]').eq(index).val() > 0 ? 'Mi ' : '';
-            let durchf_kurstageDo = $('input[name="kurstage6[]"]').eq(index).val() > 0 ? 'Do ' : '';
-            let durchf_kurstageFr = $('input[name="kurstage8[]"]').eq(index).val() > 0 ? 'Fr ' : '';
-            let durchf_kurstageSa = $('input[name="kurstage10[]"]').eq(index).val() > 0 ? 'Sa' : '';
-            let durchf_kurstageSo = $('input[name="kurstage12[]"]').eq(index).val() > 0 ? 'So' : '';
-
-            /***
-             * Terminoption Werte (Terminoptionen, Dauer, Tagescode)
-             * @type {jQuery|HTMLElement|*}
-             */
-            let durchf_terminoptionErg = '';
-            let durchf_terminoption = $('select[name="beginnoptionen[]"]').eq(index).val();
-            if (durchf_terminoption === '1') durchf_terminoptionErg = 'Beginnt laufend';
-            else if (durchf_terminoption === '2') durchf_terminoptionErg = 'Beginnt w' + oe + 'chentlich';
-            else if (durchf_terminoption === '4') durchf_terminoptionErg = 'Beginnt monatlich';
-            else if (durchf_terminoption === '8') durchf_terminoptionErg = 'Beginnt zweimonatlich';
-            else if (durchf_terminoption === '16') durchf_terminoptionErg = 'Beginnt quartalweise';
-            else if (durchf_terminoption === '32') durchf_terminoptionErg = 'Beginnt halbj' + ae + 'hrlich';
-            else if (durchf_terminoption === '64') durchf_terminoptionErg = 'Beginnt j' + ae + 'hrlich';
-            else if (durchf_terminoption === '256') durchf_terminoptionErg = 'Termin noch offen';
-            else if (durchf_terminoption === '512') durchf_terminoptionErg = 'Startgarantie';
-
-            let durchf_dauerErg = '';
-            let durchf_dauer = $('select[name="dauer[]"]').eq(index).val();
-            if (durchf_dauer === '1') durchf_dauerErg = '1 Tag';
-            else if (durchf_dauer === '2') durchf_dauerErg = '2 Tage';
-            else if (durchf_dauer === '3') durchf_dauerErg = '3 Tage';
-            else if (durchf_dauer === '4') durchf_dauerErg = '4 Tage';
-            else if (durchf_dauer === '5') durchf_dauerErg = '5 Tage';
-            else if (durchf_dauer === '6') durchf_dauerErg = '6 Tage';
-            else if (durchf_dauer === '7') durchf_dauerErg = '1 Woche';
-            else if (durchf_dauer === '14') durchf_dauerErg = '2 Wochen';
-            else if (durchf_dauer === '21') durchf_dauerErg = '3 Wochen';
-            else if (durchf_dauer === '28') durchf_dauerErg = '4 Wochen';
-            else if (durchf_dauer === '35') durchf_dauerErg = '5 Wochen';
-            else if (durchf_dauer === '42') durchf_dauerErg = '6 Wochen';
-            else if (durchf_dauer === '49') durchf_dauerErg = '7 Wochen';
-            else if (durchf_dauer === '56') durchf_dauerErg = '8 Wochen';
-            else if (durchf_dauer === '63') durchf_dauerErg = '9 Wochen';
-            else if (durchf_dauer === '70') durchf_dauerErg = '10 Wochen';
-            else if (durchf_dauer === '77') durchf_dauerErg = '11 Wochen';
-            else if (durchf_dauer === '84') durchf_dauerErg = '12 Wochen';
-            else if (durchf_dauer === '91') durchf_dauerErg = '13 Wochen';
-
-            let durchf_tagescodeErg = '';
-            let durchf_tagescode = $('select[name="tagescode[]"]').eq(index).val();
-            if (durchf_tagescode === '1') durchf_tagescodeErg = 'Ganzt' + ae + 'gig';
-            else if (durchf_tagescode === '2') durchf_tagescodeErg = 'Vormittags';
-            else if (durchf_tagescode === '3') durchf_tagescodeErg = 'Nachmittags';
-            else if (durchf_tagescode === '4') durchf_tagescodeErg = 'Abends';
-            else if (durchf_tagescode === '5') durchf_tagescodeErg = 'Wochenende';
-
-            /***
-             * Uhrzeit der Durchfuehrung
-             */
-            let durchf_zeitvon = $('input[name="zeit_von[]"]').eq(index).val();
-            let durchf_zeitbis = $('input[name="zeit_bis[]"]').eq(index).val();
-
-            /***
-             * Stunden dauer der Durchfuehrung pro Tag
-             * @type {*|string|jQuery}
-             */
-            let durchf_stunden = $('input[name="stunden[]"]').eq(index).val();
-
-            /***
-             * Preis der Durchfuehrung
-             * @type {jQuery|HTMLElement|*}
-             */
-            let durchf_preis = $('input[name="preis[]"]').eq(index).val();
-
-
-            /***
-             * Teilnehmer begrenzung
-             * @type {jQuery|HTMLElement|*}
-             */
-            let durchf_teilnehmer = $('input[name="teilnehmer[]"]').eq(index).val();
-
-            /***
-             * Hinweis fuer die Durchfuehrung
-             * @type {jQuery|HTMLElement|*}
-             */
-            let durchf_bemerkung = $('input[name="bemerkungen[]"]').eq(index).val();
-
-            let durchf_url = $('input[name="url[]"]').eq(index).val();
-            if (durchf_url !== '') {
-                if (!/^https?:\/\//i.test(durchf_url)) {
-                    durchf_url = 'https://www.' + durchf_url;
-                }
-            } else {
-                durchf_url = '';
-            }
-
-            let durchf_rollstuhl = '';
-            if ($('input[name="rollstuhlgerecht[]"]').eq(index).prop('checked')) {
-                durchf_rollstuhl = 'Barrierefreier Zugang';
-            } else {
-                durchf_rollstuhl = '';
-            }
-
-            let durchf_einstieg = '';
-            if ($('input[name="einstieg[]"]').eq(index).prop('checked')) {
-                durchf_einstieg = 'Einstieg jederzeit m' + oe + 'glich';
-            } else {
-                durchf_einstieg = '';
-            }
-
-            let durchf_sonderpreistage = $('input[name="sonderpreistage[]"]').eq(index).val();
-            let durchf_sonderpreis = $('input[name="sonderpreis[]"]').eq(index).val();
-            let durchf_preishinweis = $('input[name="preishinweise[]"]').eq(index).val();
-
-            /***
-             * Strasse, PLZ, ORT Angaben
-             * @type {jQuery|HTMLElement|*}
-             */
-            let durchf_strasse = $('input[name="strasse[]"]').eq(index).val();
-            let durchf_plz = $('input[name="plz[]"]').eq(index).val();
-            let durchf_ort = $('input[name="ort[]"]').eq(index).val();
-
-            /***
-             * Fuegt alle eingaben in die Tabelle als Zeile
-             * @type {string}
-             */
-            let tablerow = "<td>" + (durchf_terminBeginn.length > 0 ? (durchf_terminBeginn + (durchf_terminEnde.length > 0 ? ' - ' + durchf_terminEnde : '')) + "<br>" : '')
-                + durchf_kurstageMo + durchf_kurstageDi + durchf_kurstageMi + durchf_kurstageDo + durchf_kurstageFr + durchf_kurstageSa + durchf_kurstageSo
-                + (durchf_terminoptionErg.length > 0 ? "<br>" + durchf_terminoptionErg : '') + (durchf_zeitvon.length > 0 ? "<br>" + durchf_zeitvon + ' UHR' : '') + (durchf_zeitbis.length > 0 ? ' - ' + durchf_zeitbis + ' UHR' : '')
-                + "</td>" +
-                "<td>" + durchf_dauerErg + (durchf_tagescodeErg.length > 0 ? "<br>" + durchf_tagescodeErg : '') + "</td>" +
-                "<td>" + lernform + "</td>" +
-                "<td>" + (durchf_preis.length > 0 ? durchf_preis + " EUR" + "<br>" : "") + (durchf_sonderpreis.length > 0 ? "Sonderpreis von " + durchf_sonderpreis + "EUR<br> nur noch " + durchf_sonderpreistage + " Tage <br>" : "") + (durchf_preishinweis.length > 0 ? durchf_preishinweis + "<br>" : "") + (durchf_stunden.length > 0 ? "(" + durchf_stunden + " Std.)" : "") + "</td>" +
-                "<td>" + (durchf_strasse.length > 0 ? durchf_strasse + "<br>" : "") + (durchf_plz.length > 0 ? durchf_plz + " " : "") + (durchf_ort.length > 0 ? durchf_ort + "<br>" : "") + "</td>" +
-                "<td>" + (durchf_teilnehmer.length > 0 ? "max. " + durchf_teilnehmer + " Teilnehmer:innen <br>" : "") + (durchf_bemerkung.length > 0 ? durchf_bemerkung + "<br>" : "") + (durchf_rollstuhl.length > 0 ? durchf_rollstuhl + "<br>" : "") + (durchf_einstieg.length > 0 ? durchf_einstieg + "<br>" : "") + (durchf_url.length > 0 ? " <a target=\"_blank\" href= " + durchf_url + ">zur Anmeldung</a>" + "<br>" : "") + "</td>";
-            vorschautablebody.find('tbody tr:last').append(tablerow);
-        });
-
-        /*
-        platziert die Eingaben in die Vorschau
-         */
-        if (kurstitel !== '') {
-            $('.wisy-vorschau-kurstitel').text('').text(kurstitel.val());
-        } else {
-            $('.wisy-vorschau-kurstitel').text('').text('Kursvorschau');
-        }
-
-        if (kursbeschreibung !== '') {
-            let kValue = kursbeschreibung.val();
-            let formattedText = kValue.replace(/\n/g, '<br>');
-            $('.wisy-vorschau-inhalt').html(formattedText);
-            $(this).css('display', 'block');
-        } else {
-            $('.wisy-vorschau-inhalt').text('').text('Sie haben keine Kursbeschreibung');
-        }
-
-        if (lernziel !== '') {
-            let lzValue = lernziel.val();
-            let formattedText = lzValue.replace(/\n/g, '<br>');
-            $('.wisy-vorschau-lernziel').html(formattedText);
-        } else {
-            $('.wisy-vorschau-lernziel').text('').text('Sie haben kein Lernziel!');
-        }
-
-        if (voraussetzung !== '') {
-            let vsValue = voraussetzung.val();
-            let formattedText = vsValue.replace(/\n/g, '<br>');
-            $('.wisy-vorschau-voraussetzung').html(formattedText);
-        } else {
-            $('.wisy-vorschau-voraussetzung').text('').text('Sie haben keine Voraussetzungen in Ihrem Kurs!');
-        }
-
-        if (zielgruppe !== '') {
-            let zValue = zielgruppe.val();
-            let formattedText = zValue.replace(/\n/g, '<br>');
-            $('.wisy-vorschau-zielgruppe').html(formattedText);
-        } else {
-            $('.wisy-vorschau-zielgruppe').text('').text('Sie haben keine Zielgruppe festgelegt!');
-        }
-
-        if (themaHauptkategorie !== '' && themaUnterkategorie !== '')
-            $('.wisy-vorschau-thema').html(themaUnterkategorie.text());
-
-
-        $('.wisy-vorschau-kursniveau').text('').text(niveaustufe !== undefined && checkedStufen.length<=0 ? niveaustufe : checkedStufen);
-       // $('.wisy-vorschau-kursniveau').text('').text(sprachstufe !== undefined && niveaustufe == undefined ? sprachstufe : niveaustufe);
-
-        // Leere das Array, um sicherzustellen, dass es keine alten Werte enthält
-        var checkedStufen = [];
-
-        // Iteriere über alle Checkboxen mit der Klasse "wisy-sprachstufen-check"
-        $('.wisy-sprachstufen-check:checked').each(function() {
-            // Füge den Wert (value) der geprüften Checkbox zum Array hinzu
-            checkedStufen.push($(this).val());
-        });
-
-
-        for (var key in checkedStufen) {
-            if (checkedStufen.hasOwnProperty(key)) {
-                // key ist der Name der Eigenschaft (z.B., "A1", "A2", usw.)
-                // checkedStufen[key] gibt den Wert der Eigenschaft (true) an
-                console.log("Schlüssel:", key, "Wert:", checkedStufen[key]);
-            }
-        }
-        /*if (abschlussart !== '') $('.wisy-vorschau-abschluss').text('').text(abschlussart.val());
-        else $('.wisy-vorschau-abschluss').text('').text('Ihr Kurs hat keinen Abschluss!');*/
-
-        var ausgewaehlteTexte = "";
-
-        $('.wisy-foerderungen-checkbox').each(function () {
-            var isChecked = $(this).prop('checked');
-            //  var value = $(this).val();
-            var labelText = $(this).siblings('label').text();
-
-            if (isChecked) {
-                ausgewaehlteTexte += (ausgewaehlteTexte.length > 0 ? ', ' + labelText : labelText);
-                if (labelText === 'Aktivierungsgutschein' || labelText === 'Bildungsgutschein') {
-                    ausgewaehlteTexte += ($('.wisy-foerderungsnummerA').val() !== '' ? (' +AZAV NR.: ' + $('.wisy-foerderungsnummerA').val()) : '');
-                }
-                if (labelText === 'Bildungsurlaub') {
-                    ausgewaehlteTexte += ($('.wisy-foerderungsnummerB').val() !== '' ? (' +NR.: ' + $('.wisy-foerderungsnummerB').val()) : '');
-                }
-            }
-            $('.wisy-vorschau-foerderung').text(ausgewaehlteTexte);
-        });
-
-        $('.wisy-vorschau-stichwort').text('').text(Object.keys(selectedValues).length > 0 ? Object.keys(selectedValues).join(', ') : '');
-        $('.wisy-vorschau-nachricht').text('').text(hinweisRedaktion !== '' ? hinweisRedaktion.val() : '');
-
-    });
 
 //Kompetenzen manuell einfuegen
     $('#stichwortvorschlag').autocomplete({
@@ -2752,6 +2472,7 @@ $(document).ready(function () {
         $(this).removeClass('active');
     });
 
+    let checkedStufen = [];
 
     $('.wisy-kategorie-check').on('change', function (event) {
         event.preventDefault();
@@ -2802,11 +2523,291 @@ $(document).ready(function () {
 
                 if (!checkboxSelected) $('.wisy-niveau-block').hide();
 
+                /**
+                 * SPRACHNIVEAU CHECK
+                 * @type {*[]}
+                 */
+
+                $('.wisy-sprachstufen-check').on('change', function () {
+                    // Überprüfen, ob die Checkbox ausgewählt ist
+                    if ($(this).prop('checked')) {
+                        // Wenn ausgewählt, füge den Wert zum Array hinzu
+                        checkedStufen.push($(this).val());
+                    } else {
+                        // Wenn nicht ausgewählt, entferne  den Wert aus dem Array
+                        let index = checkedStufen.indexOf($(this).val());
+                        if (index !== -1) {
+                            checkedStufen.splice(index, 1);
+                        }
+                    }
+                });
             },
             error: function () {
                 console.log('FEHLER: Beim Empfangen der Themen ist ein Problem entstanden.');
             }
         });
+    });
+
+    /***************************************
+     *****************VORSCHAU***************
+     ****************************************/
+    $('#wisy-vorschau').on('click', function (event) {
+        event.preventDefault();
+
+        $('.wisy-vorschau-modal').css('display', 'block');
+        $('body').css('overflow-y', 'hidden');
+        /*
+        Holt die Eingabe Felder für die Vorschau
+         */
+        let kurstitel = $('.wisy-kurs-titel');
+        let kursbeschreibung = $('.wisy-kursbeschreibung-text');
+        let lernziel = $('.wisy-lernziel-text');
+        let voraussetzung = $('.wisy-voraussetzung-text');
+        let zielgruppe = $('.wisy-zielgruppe-text');
+        let themaHauptkategorie = $('.wisy-select-hauptkategorie option:selected');
+        let themaUnterkategorie = $('.wisy-select-unterkategorie option:selected');
+        let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
+        let sprachstufe = checkedStufen;
+     //   let abschlussart = $('.abschluss-select');
+        let hinweisRedaktion = $('.wisy-nachricht-content input');
+
+        let vorschautablebody = $('#vorschau-table');
+
+        vorschautablebody.find('tbody').empty(); // leert vorherige Einträge
+
+        // Geben Sie den Text zur Überprüfung auf der Konsole aus
+        $('.wisy-vorschau-lernform').text('').text(lernform);
+
+        /***
+         * Durchfuehrungsnummer des Kurses
+         */
+        $('input[name="nr[]"]').each(function (index) {
+            let durchf_nr = $(this).val();
+            let tablerowNR = "<tr><td>" + durchf_nr + "</td>";
+            vorschautablebody.find('tbody').append(tablerowNR);
+
+            /***
+             * Dauer des Kurses (Datum)
+             * @type {*|string|jQuery}
+             */
+            let durchf_terminBeginn = $('input[name="beginn[]"]').eq(index).val();
+            let durchf_terminEnde = $('input[name="ende[]"]').eq(index).val();
+
+            /***
+             * Wochentage der Durchfuehrungstage
+             * @type {string}
+             */
+            let durchf_kurstageMo = $('input[name="kurstage0[]"]').eq(index).val() > 0 ? 'Mo ' : '';
+            let durchf_kurstageDi = $('input[name="kurstage2[]"]').eq(index).val() > 0 ? 'Di ' : '';
+            let durchf_kurstageMi = $('input[name="kurstage4[]"]').eq(index).val() > 0 ? 'Mi ' : '';
+            let durchf_kurstageDo = $('input[name="kurstage6[]"]').eq(index).val() > 0 ? 'Do ' : '';
+            let durchf_kurstageFr = $('input[name="kurstage8[]"]').eq(index).val() > 0 ? 'Fr ' : '';
+            let durchf_kurstageSa = $('input[name="kurstage10[]"]').eq(index).val() > 0 ? 'Sa' : '';
+            let durchf_kurstageSo = $('input[name="kurstage12[]"]').eq(index).val() > 0 ? 'So' : '';
+
+            /***
+             * Terminoption Werte (Terminoptionen, Dauer, Tagescode)
+             * @type {jQuery|HTMLElement|*}
+             */
+            let durchf_terminoptionErg = '';
+            let durchf_terminoption = $('select[name="beginnoptionen[]"]').eq(index).val();
+            if (durchf_terminoption === '1') durchf_terminoptionErg = 'Beginnt laufend';
+            else if (durchf_terminoption === '2') durchf_terminoptionErg = 'Beginnt w' + oe + 'chentlich';
+            else if (durchf_terminoption === '4') durchf_terminoptionErg = 'Beginnt monatlich';
+            else if (durchf_terminoption === '8') durchf_terminoptionErg = 'Beginnt zweimonatlich';
+            else if (durchf_terminoption === '16') durchf_terminoptionErg = 'Beginnt quartalweise';
+            else if (durchf_terminoption === '32') durchf_terminoptionErg = 'Beginnt halbj' + ae + 'hrlich';
+            else if (durchf_terminoption === '64') durchf_terminoptionErg = 'Beginnt j' + ae + 'hrlich';
+            else if (durchf_terminoption === '256') durchf_terminoptionErg = 'Termin noch offen';
+            else if (durchf_terminoption === '512') durchf_terminoptionErg = 'Startgarantie';
+
+            let durchf_dauerErg = '';
+            let durchf_dauer = $('select[name="dauer[]"]').eq(index).val();
+            if (durchf_dauer === '1') durchf_dauerErg = '1 Tag';
+            else if (durchf_dauer === '2') durchf_dauerErg = '2 Tage';
+            else if (durchf_dauer === '3') durchf_dauerErg = '3 Tage';
+            else if (durchf_dauer === '4') durchf_dauerErg = '4 Tage';
+            else if (durchf_dauer === '5') durchf_dauerErg = '5 Tage';
+            else if (durchf_dauer === '6') durchf_dauerErg = '6 Tage';
+            else if (durchf_dauer === '7') durchf_dauerErg = '1 Woche';
+            else if (durchf_dauer === '14') durchf_dauerErg = '2 Wochen';
+            else if (durchf_dauer === '21') durchf_dauerErg = '3 Wochen';
+            else if (durchf_dauer === '28') durchf_dauerErg = '4 Wochen';
+            else if (durchf_dauer === '35') durchf_dauerErg = '5 Wochen';
+            else if (durchf_dauer === '42') durchf_dauerErg = '6 Wochen';
+            else if (durchf_dauer === '49') durchf_dauerErg = '7 Wochen';
+            else if (durchf_dauer === '56') durchf_dauerErg = '8 Wochen';
+            else if (durchf_dauer === '63') durchf_dauerErg = '9 Wochen';
+            else if (durchf_dauer === '70') durchf_dauerErg = '10 Wochen';
+            else if (durchf_dauer === '77') durchf_dauerErg = '11 Wochen';
+            else if (durchf_dauer === '84') durchf_dauerErg = '12 Wochen';
+            else if (durchf_dauer === '91') durchf_dauerErg = '13 Wochen';
+
+            let durchf_tagescodeErg = '';
+            let durchf_tagescode = $('select[name="tagescode[]"]').eq(index).val();
+            if (durchf_tagescode === '1') durchf_tagescodeErg = 'Ganzt' + ae + 'gig';
+            else if (durchf_tagescode === '2') durchf_tagescodeErg = 'Vormittags';
+            else if (durchf_tagescode === '3') durchf_tagescodeErg = 'Nachmittags';
+            else if (durchf_tagescode === '4') durchf_tagescodeErg = 'Abends';
+            else if (durchf_tagescode === '5') durchf_tagescodeErg = 'Wochenende';
+
+            /***
+             * Uhrzeit der Durchfuehrung
+             */
+            let durchf_zeitvon = $('input[name="zeit_von[]"]').eq(index).val();
+            let durchf_zeitbis = $('input[name="zeit_bis[]"]').eq(index).val();
+
+            /***
+             * Stunden dauer der Durchfuehrung pro Tag
+             * @type {*|string|jQuery}
+             */
+            let durchf_stunden = $('input[name="stunden[]"]').eq(index).val();
+
+            /***
+             * Preis der Durchfuehrung
+             * @type {jQuery|HTMLElement|*}
+             */
+            let durchf_preis = $('input[name="preis[]"]').eq(index).val();
+
+
+            /***
+             * Teilnehmer begrenzung
+             * @type {jQuery|HTMLElement|*}
+             */
+            let durchf_teilnehmer = $('input[name="teilnehmer[]"]').eq(index).val();
+
+            /***
+             * Hinweis fuer die Durchfuehrung
+             * @type {jQuery|HTMLElement|*}
+             */
+            let durchf_bemerkung = $('input[name="bemerkungen[]"]').eq(index).val();
+
+            let durchf_url = $('input[name="url[]"]').eq(index).val();
+            if (durchf_url !== '') {
+                if (!/^https?:\/\//i.test(durchf_url)) {
+                    durchf_url = 'https://www.' + durchf_url;
+                }
+            } else {
+                durchf_url = '';
+            }
+
+            let durchf_rollstuhl = '';
+            if ($('input[name="rollstuhlgerecht[]"]').eq(index).prop('checked')) {
+                durchf_rollstuhl = 'Barrierefreier Zugang';
+            } else {
+                durchf_rollstuhl = '';
+            }
+
+            let durchf_einstieg = '';
+            if ($('input[name="einstieg[]"]').eq(index).prop('checked')) {
+                durchf_einstieg = 'Einstieg jederzeit m' + oe + 'glich';
+            } else {
+                durchf_einstieg = '';
+            }
+
+            let durchf_sonderpreistage = $('input[name="sonderpreistage[]"]').eq(index).val();
+            let durchf_sonderpreis = $('input[name="sonderpreis[]"]').eq(index).val();
+            let durchf_preishinweis = $('input[name="preishinweise[]"]').eq(index).val();
+
+            /***
+             * Strasse, PLZ, ORT Angaben
+             * @type {jQuery|HTMLElement|*}
+             */
+            let durchf_strasse = $('input[name="strasse[]"]').eq(index).val();
+            let durchf_plz = $('input[name="plz[]"]').eq(index).val();
+            let durchf_ort = $('input[name="ort[]"]').eq(index).val();
+
+            /***
+             * Fuegt alle eingaben in die Tabelle als Zeile
+             * @type {string}
+             */
+            let tablerow = "<td>" + (durchf_terminBeginn.length > 0 ? (durchf_terminBeginn + (durchf_terminEnde.length > 0 ? ' - ' + durchf_terminEnde : '')) + "<br>" : '')
+                + durchf_kurstageMo + durchf_kurstageDi + durchf_kurstageMi + durchf_kurstageDo + durchf_kurstageFr + durchf_kurstageSa + durchf_kurstageSo
+                + (durchf_terminoptionErg.length > 0 ? "<br>" + durchf_terminoptionErg : '') + (durchf_zeitvon.length > 0 ? "<br>" + durchf_zeitvon + ' UHR' : '') + (durchf_zeitbis.length > 0 ? ' - ' + durchf_zeitbis + ' UHR' : '')
+                + "</td>" +
+                "<td>" + durchf_dauerErg + (durchf_tagescodeErg.length > 0 ? "<br>" + durchf_tagescodeErg : '') + "</td>" +
+                "<td>" + lernform + "</td>" +
+                "<td>" + (durchf_preis.length > 0 ? durchf_preis + " EUR" + "<br>" : "") + (durchf_sonderpreis.length > 0 ? "Sonderpreis von " + durchf_sonderpreis + "EUR<br> nur noch " + durchf_sonderpreistage + " Tage <br>" : "") + (durchf_preishinweis.length > 0 ? durchf_preishinweis + "<br>" : "") + (durchf_stunden.length > 0 ? "(" + durchf_stunden + " Std.)" : "") + "</td>" +
+                "<td>" + (durchf_strasse.length > 0 ? durchf_strasse + "<br>" : "") + (durchf_plz.length > 0 ? durchf_plz + " " : "") + (durchf_ort.length > 0 ? durchf_ort + "<br>" : "") + "</td>" +
+                "<td>" + (durchf_teilnehmer.length > 0 ? "max. " + durchf_teilnehmer + " Teilnehmer:innen <br>" : "") + (durchf_bemerkung.length > 0 ? durchf_bemerkung + "<br>" : "") + (durchf_rollstuhl.length > 0 ? durchf_rollstuhl + "<br>" : "") + (durchf_einstieg.length > 0 ? durchf_einstieg + "<br>" : "") + (durchf_url.length > 0 ? " <a target=\"_blank\" href= " + durchf_url + ">zur Anmeldung</a>" + "<br>" : "") + "</td>";
+            vorschautablebody.find('tbody tr:last').append(tablerow);
+        });
+
+        /*
+        platziert die Eingaben in die Vorschau
+         */
+        if (kurstitel !== '') {
+            $('.wisy-vorschau-kurstitel').text('').text(kurstitel.val());
+        } else {
+            $('.wisy-vorschau-kurstitel').text('').text('Kursvorschau');
+        }
+
+        if (kursbeschreibung !== '') {
+            let kValue = kursbeschreibung.val();
+            let formattedText = kValue.replace(/\n/g, '<br>');
+            $('.wisy-vorschau-inhalt').html(formattedText);
+            $(this).css('display', 'block');
+        } else {
+            $('.wisy-vorschau-inhalt').text('').text('Sie haben keine Kursbeschreibung');
+        }
+
+        if (lernziel !== '') {
+            let lzValue = lernziel.val();
+            let formattedText = lzValue.replace(/\n/g, '<br>');
+            $('.wisy-vorschau-lernziel').html(formattedText);
+        } else {
+            $('.wisy-vorschau-lernziel').text('').text('Sie haben kein Lernziel!');
+        }
+
+        if (voraussetzung !== '') {
+            let vsValue = voraussetzung.val();
+            let formattedText = vsValue.replace(/\n/g, '<br>');
+            $('.wisy-vorschau-voraussetzung').html(formattedText);
+        } else {
+            $('.wisy-vorschau-voraussetzung').text('').text('Sie haben keine Voraussetzungen in Ihrem Kurs!');
+        }
+
+        if (zielgruppe !== '') {
+            let zValue = zielgruppe.val();
+            let formattedText = zValue.replace(/\n/g, '<br>');
+            $('.wisy-vorschau-zielgruppe').html(formattedText);
+        } else {
+            $('.wisy-vorschau-zielgruppe').text('').text('Sie haben keine Zielgruppe festgelegt!');
+        }
+
+        if (themaHauptkategorie !== '' && themaUnterkategorie !== '')
+            $('.wisy-vorschau-thema').html(themaUnterkategorie.text());
+
+
+       // $('.wisy-vorschau-kursniveau').text('').text(niveaustufe !== undefined && checkedStufen.length <= 0 ? niveaustufe : checkedStufen);
+         $('.wisy-vorschau-kursniveau').text('').text(sprachstufe.length>0 && niveaustufe == undefined ? sprachstufe.join(', ') : niveaustufe);
+
+
+        /*if (abschlussart !== '') $('.wisy-vorschau-abschluss').text('').text(abschlussart.val());
+        else $('.wisy-vorschau-abschluss').text('').text('Ihr Kurs hat keinen Abschluss!');*/
+
+        var ausgewaehlteTexte = "";
+
+        $('.wisy-foerderungen-checkbox').each(function () {
+            var isChecked = $(this).prop('checked');
+            //  var value = $(this).val();
+            var labelText = $(this).siblings('label').text();
+
+            if (isChecked) {
+                ausgewaehlteTexte += (ausgewaehlteTexte.length > 0 ? ', ' + labelText : labelText);
+                if (labelText === 'Aktivierungsgutschein' || labelText === 'Bildungsgutschein') {
+                    ausgewaehlteTexte += ($('.wisy-foerderungsnummerA').val() !== '' ? (' +AZAV NR.: ' + $('.wisy-foerderungsnummerA').val()) : '');
+                }
+                if (labelText === 'Bildungsurlaub') {
+                    ausgewaehlteTexte += ($('.wisy-foerderungsnummerB').val() !== '' ? (' +NR.: ' + $('.wisy-foerderungsnummerB').val()) : '');
+                }
+            }
+            $('.wisy-vorschau-foerderung').text(ausgewaehlteTexte);
+        });
+
+        $('.wisy-vorschau-stichwort').text('').text(Object.keys(selectedValues).length > 0 ? Object.keys(selectedValues).join(', ') : '');
+        $('.wisy-vorschau-nachricht').text('').text(hinweisRedaktion !== '' ? hinweisRedaktion.val() : '');
+
     });
 
 
@@ -2821,7 +2822,7 @@ $(document).ready(function () {
         let themaHauptkategorie = $('.wisy-select-hauptkategorie option:selected').text();
         let themaUnterkategorie = $('.wisy-select-unterkategorie option:selected').text();
         let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
-        let sprachstufe = $('.wisy-sprachstufen-check:checked').val();
+        let sprachstufe = checkedStufen;
         let abschlussart = $('.abschluss-select').val();
         //  let lernform = $('.lernform-select').val(); ALT
         let hinweisRedaktion = $('.wisy-nachricht-content input').val();
