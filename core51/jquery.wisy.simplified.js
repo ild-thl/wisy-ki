@@ -2133,7 +2133,6 @@ $(document).ready(function () {
     });
 
 
-
 //Kompetenzen manuell einfuegen
     $('#stichwortvorschlag').autocomplete({
         source: function (request, response) {
@@ -2489,11 +2488,11 @@ $(document).ready(function () {
             success: function (response) {
                 $('.niveau-stufen').html(response);
 
-                if ($('#berufliche_bildung-checkbox').prop('checked') === true || $('#sprache-checkbox').prop('checked') === true) {
-                    $('.wisy-kursniveau-cell').css({'display': 'block'});
-                } else {
-                    $('.wisy-kursniveau-cell').css({'display': 'none'});
-                }
+                /*   if ($('#berufliche_bildung-checkbox').prop('checked') === true || $('#sprache-checkbox').prop('checked') === true) {
+                       $('.wisy-kursniveau-cell').css({'display': 'block'});
+                   } else {
+                       $('.wisy-kursniveau-cell').css({'display': 'none'});
+                   }*/
 
                 $('.wisy-niveau-block').show();
                 //   if (!$('.wisy-kategorie-check').prop('checked')) $('.niveau-stufen').css({'display': 'none'})
@@ -2568,7 +2567,7 @@ $(document).ready(function () {
         let themaUnterkategorie = $('.wisy-select-unterkategorie option:selected');
         let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
         let sprachstufe = checkedStufen;
-     //   let abschlussart = $('.abschluss-select');
+        //   let abschlussart = $('.abschluss-select');
         let hinweisRedaktion = $('.wisy-nachricht-content input');
 
         let vorschautablebody = $('#vorschau-table');
@@ -2779,14 +2778,27 @@ $(document).ready(function () {
             $('.wisy-vorschau-thema').html(themaUnterkategorie.text());
 
 
-       // $('.wisy-vorschau-kursniveau').text('').text(niveaustufe !== undefined && checkedStufen.length <= 0 ? niveaustufe : checkedStufen);
-         $('.wisy-vorschau-kursniveau').text('').text(sprachstufe.length>0 && niveaustufe == undefined ? sprachstufe.join(', ') : niveaustufe);
+        // $('.wisy-vorschau-kursniveau').text('').text(niveaustufe !== undefined && checkedStufen.length <= 0 ? niveaustufe : checkedStufen);
+        $('.wisy-vorschau-kursniveau').text('').text(sprachstufe.length > 0 && niveaustufe == undefined ? sprachstufe.join(', ') : niveaustufe);
 
 
         /*if (abschlussart !== '') $('.wisy-vorschau-abschluss').text('').text(abschlussart.val());
         else $('.wisy-vorschau-abschluss').text('').text('Ihr Kurs hat keinen Abschluss!');*/
 
-        var ausgewaehlteTexte = "";
+        let ausgewaehlteLernform = '';
+
+        $('.wisy-lernform-checkbox').each(function () {
+            var isChecked = $(this).prop('checked');
+            var labelText = $(this).siblings('label').text();
+
+            if (isChecked) {
+                ausgewaehlteLernform += labelText + ' ';
+            }
+            $('.wisy-vorschau-lernform').text(ausgewaehlteLernform);
+        });
+
+
+        let ausgewaehlteTexte = "";
 
         $('.wisy-foerderungen-checkbox').each(function () {
             var isChecked = $(this).prop('checked');

@@ -607,7 +607,7 @@ class WISY_EDIT_RENDERER_CLASS
             $stichwid = intval($db->fcs8('id'));
 
             //    $text .= '<span class="wisy-lernform-span"><input class="wisy-lernform-checkbox" type="checkbox" name="useredit_stichwoerter[]" value="' . $stichwid . '"/><label for="' . $stichwid . '">' . $stichwort . '</label><input type="hidden" name="useredit_stichwoerterold[]" value="' . $stichwid . '"/></span><br>';
-            $text .= '<label for="' . $stichwid . '"><input class="wisy-lernform-checkbox" id="'.$stichwid.'" type="checkbox" name="useredit_stichwoerter[]" value="' . $stichwid . '"/>' . $stichwort . '<input type="hidden" name="useredit_stichwoerterold[]" value="' . $stichwid . '"/></label><br>';
+            $text .= '<span class="wisy-foerderung-span"><input class="wisy-lernform-checkbox" id="'.$stichwid.'" type="checkbox" name="useredit_stichwoerter[]" value="' . $stichwid . '"/><label for="' . $stichwid . '">' . $stichwort . '<input type="hidden" name="useredit_stichwoerterold[]" value="' . $stichwid . '"/></label></span><br>';
         }
         return $text;
     }
