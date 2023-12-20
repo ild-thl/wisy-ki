@@ -1445,6 +1445,7 @@ class OccupationSkillsStep extends Step {
         }
 
         this.occupation = this.scout.account.getOccupation();
+        this.skills = this.scout.account.getSkills();
         if (!this.occupation) {
             console.error("no occupation selected");
             return;
@@ -1452,9 +1453,17 @@ class OccupationSkillsStep extends Step {
 
         this.data.occupation = this.occupation.label;
 
-        const skills = await this.suggestSkills(this.occupation.uri);
+        const skills = await this.getRelevantOccupationSkills();
+
+        this.data.showmore = false;
+        this.data.showmore = false;
 
         if (skills.length) {
+            if (skills.length > 10) {
+                this.data.showmore = true;
+                this.data.showmore = true;
+            }
+
             this.data.skillsfound = true;
             this.data.skills = skills;
         }
@@ -1602,17 +1611,39 @@ class OccupationSkillsStep extends Step {
 
     /**
      * Suggests skills based on the given ESCO concept URI.
-     * @param {string} uri - The URI to get skills for.
      * @returns {Promise<Array>} - An array of skills.
      * @throws {Error} - If the given URI is not a valid ESCO concept URI.
      */
-    async suggestSkills(uri) {
-        if (!uri.startsWith("http://data.europa.eu/esco/")) {
+    async getRelevantOccupationSkills() {
+        let occupation = this.scout.account.getOccupation();
+
+        if (!occupation.uri.startsWith("http://data.europa.eu/esco/")) {
             throw new Error("invalid ESCO concept URI");
         }
 
+        let skills = this.scout.account.getSkills();
+
+        // Build context.
+        let context = "";
+        if (occupation) {
+            context += "\n Kompetenzen von " + occupation.label;
+        }
+
+        if (skills) {
+            context +=
+                "\n und ähnlich zu Kompetenzen: " +
+                Object.values(skills)
+                    .map((skill) => skill.label)
+                    .join(" ");
+        }
+
         const limit = 10;
-        const params = { uri: uri, limit: limit, onlyrelevant: true };
+        const params = {
+            uri: occupation.uri,
+            limit: limit,
+            onlyrelevant: true,
+            context: context,
+        };
 
         const url = "./esco/getConceptSkills?" + new URLSearchParams(params);
         const response = await fetch(url);
@@ -1679,8 +1710,8 @@ class OccupationSkillsStep extends Step {
      */
     isRendered() {
         return (
-            document.querySelector(`#${this.name} .step`).children.length !== 0 &&
-            this.occupation == this.scout.account.getOccupation()
+            document.querySelector(`#${this.name} .step`).children.length !==
+                0 && this.occupation == this.scout.account.getOccupation()
         );
     }
 }

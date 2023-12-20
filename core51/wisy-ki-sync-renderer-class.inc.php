@@ -767,7 +767,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 			$lastsync = $this->statetable->readState('lastsync.kurse.global', '0000-00-00 00:00:00');
 	}
 
-	function updateEmbeddings($deepupdate) {
+	function updateCourseEmbeddings($deepupdate) {
 		$this->prepareEditEnv($deepupdate);
 
 		// Check for UserId.
@@ -791,7 +791,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 			$wherecourseidsql = "AND k.id = " . intval($_REQUEST['courseid']);
 		}
 
-		// build the SQL query to retrieve courses without levels
+		// build the SQL query to retrieve courses without or and old embedding
 		$sql = "SELECT k.id, k.titel, k.beschreibung, GROUP_CONCAT(s.stichwort) as tags, t.thema
 				FROM kurse k
 				LEFT JOIN kurse_stichwort ks ON k.id = ks.primary_id
@@ -826,7 +826,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 		// loop through the courses and generate and store the embeddings for the course description.
 		while ($db->next_record()) {
 			$coursecount++;
-			if ($this->createEmbedding($db->Record)) {
+			if ($this->createCourseEmbedding($db->Record)) {
 				$this->log(" - Calculated embedding successfully.");
 				$updatedcount++;
 			} else {
@@ -837,7 +837,94 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 		$this->log("Successfully updated embeddings for $updatedcount/$coursecount courses.");
 	}
 
-	function createEmbedding($course) {
+	function updateTagEmbeddings($deepupdate) {
+		$this->prepareEditEnv($deepupdate);
+
+		// Check for UserId.
+		if (!isset($_REQUEST['userid'])) {
+			$this->log("userid ist zwingend erforderlich.");
+			exit();
+		} else {
+			$_SESSION['g_session_userid'] = $_REQUEST['userid'];
+		}
+
+		// create a new DB_Admin object
+		$db = new DB_Admin();
+
+		// The amount of tags to be embedded.
+		$limit = ""; // Set default.
+		if (!empty($_REQUEST['batchsize']) && intval($_REQUEST['batchsize']) > 0) {
+			$limit = 'ORDER BY RAND() LIMIT ' . intval($_REQUEST['batchsize']);
+		}
+		$wheretagidsql = ""; // Set default.
+		if (!empty($_REQUEST['tagid']) && intval($_REQUEST['tagid']) > 0) {
+			$wheretagidsql = "AND s.id = " . intval($_REQUEST['tagid']);
+		}
+
+		// build the SQL query to retrieve tags without an embedding
+		$sql = "SELECT t.tag_id, t.tag_name
+				FROM tag t
+				LEFT JOIN tag_embedding te ON te.tag_id = t.tag_id
+				WHERE te.tag_id IS NULL -- Embedding does not yet exist
+				AND s.eigenschaften IN (524288, 1048576) -- ESCO-Kompetenz or ESCO-Tätigkeit
+				$wheretagidsql
+				GROUP BY s.id
+				$limit";
+
+		// execute the SQL query and retrieve the courses
+		if (!$db->query($sql)) {
+			$this->log("Error executing sql: $sql");
+		}
+
+		$this->log("For " . $db->ResultNumRows . " tag embeddings will be calculated.");
+
+		$tagcount = 0;
+		$updatedcount = 0;
+
+		// loop through the courses and generate and store the embeddings for the course description.
+		while ($db->next_record()) {
+			$tagcount++;
+			if ($this->createTagEmbedding($db->Record)) {
+				$this->log(" - Calculated embedding successfully.");
+				$updatedcount++;
+			} else {
+				$this->log(" - Error: Couldn't store embedding in db.");
+			}
+		}
+
+		$this->log("Successfully updated embeddings for $updatedcount/$tagcount courses.");
+	}
+
+	function createTagEmbedding($tag) {
+		$doc = utf8_encode($tag['tag_name']);
+
+		// Remove "(ESCO)" from stichwort.
+		$doc = str_replace(" (ESCO)", "", $doc);
+
+		$this->log("Calculating embedding for course {$tag['tag_id']}, " . $tag['tag_name']);
+		try {
+			$embeddings = $this->pythonAPI->getEmbeddings(array($doc));
+		} catch (Exception $e) {
+			$this->log($e->getMessage());
+			return false;
+		}
+		if (!$embeddings) {
+			$this->log("- Failed calculating embedding.");
+			exit();
+		}
+		$embedding = json_encode($embeddings[0]);
+
+		$db2 = new DB_Admin();
+		$sql = "REPLACE INTO tag_embedding (tag_id, embedding, date_modified) VALUES ({$tag['tag_id']}, '$embedding', NOW())";
+
+		if ($db2->query($sql)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function createCourseEmbedding($course) {
 		$doc = utf8_encode($course['title']) . ' ' . utf8_encode($course['beschreibung']) . ' ' . utf8_encode($course['tags']) . ' ' . utf8_encode($course['thema']);
 
 		$this->log("Calculating embedding for course {$course['id']}, " . $course['title']);
@@ -1161,7 +1248,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 			if (!$doEmbedding) {
 				$this->log(" - skip updateing embedding");
 			} else {
-				if ($this->createEmbedding($course)) {
+				if ($this->createCourseEmbedding($course)) {
 					$this->log(" - Calculated embedding successfully.");
 					$updatedembeddingcount++;
 				} else {
@@ -1228,10 +1315,17 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 			} catch (Exception $e) {
 				$this->log("********** ERROR: " . $e->getMessage());
 			}
-		} else if (isset($_GET['updateEmbeddings'])) {
+		} else if (isset($_GET['updateCourseEmbeddings'])) {
 			$this->log("********** $host: starting update of course embeddings - if you do not read \"done.\" below, we're aborted unexpectedly and things may not work!");
 			try {
-				$this->updateEmbeddings(false);
+				$this->updateCourseEmbeddings(false);
+			} catch (Exception $e) {
+				$this->log("********** ERROR: " . $e->getMessage());
+			}
+		} else if (isset($_GET['updateTagEmbeddings'])) {
+			$this->log("********** $host: starting update of tag embeddings - if you do not read \"done.\" below, we're aborted unexpectedly and things may not work!");
+			try {
+				$this->updateTagEmbeddings(false);
 			} catch (Exception $e) {
 				$this->log("********** ERROR: " . $e->getMessage());
 			}

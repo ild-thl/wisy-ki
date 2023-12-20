@@ -308,7 +308,7 @@ class WISY_KI_ESCO_CLASS {
      * @param int $limit
      * @return array [{"label":"title1","value":"url1"},{"label":"title2","value":"url2"}]
      */
-    function getSkillsOf($uri, $onlyrelevant = false) {
+    function getSkillsOf($uri, $onlyrelevant = false, $context = "") {
         $escoSuggestions =  array();
 
         // Build request url.
@@ -330,7 +330,7 @@ class WISY_KI_ESCO_CLASS {
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($curl, CURLOPT_URL, $getUrl);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 80);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 10);
 
         $response = curl_exec($curl);
 
@@ -341,14 +341,15 @@ class WISY_KI_ESCO_CLASS {
         curl_close($curl);
 
         // Decode response and filter results for title and uri attributes.
+        $skills = [];
         $response = json_decode($response, true);
         if (array_key_exists('hasEssentialSkill', $response['_links'])) {
-            $skills = $response['_links']['hasEssentialSkill'];
+            $skills = array_merge($skills, $response['_links']['hasEssentialSkill']);
             if (array_key_exists('hasOptionalSkill', $response['_links'])) {
                 $skills = array_merge($skills, $response['_links']['hasOptionalSkill']);
             }
         } else if (array_key_exists('narrowerSkill', $response['_links'])) {
-            $skills = $response['_links']['narrowerSkill'];
+            $skills = array_merge($skills, $response['_links']['narrowerSkill']);
         } else {
             return [];
         }
@@ -366,11 +367,100 @@ class WISY_KI_ESCO_CLASS {
             $escoSuggestions = $this->filter_is_relevant($escoSuggestions);
         }
 
+        if (!empty($context)) {
+            $escoSuggestions = $this->sortConceptSkillsByRelevancy($context, $escoSuggestions);
+        }
+
         return array(
             "uri" => $response["uri"],
             "title" => $response["title"],
             "skills" => $escoSuggestions,
         );
+    }
+
+    function sortConceptSkillsByRelevancy($context, $escoSuggestions) {
+        // Get embedding of the context.
+        try {
+            $occupationEmbedding = $this->pythonAPI->getEmbeddings(array($context))[0];
+            // catch timeout error and return unsorted array.
+        } catch (Exception $e) {
+            return $escoSuggestions;
+        }
+
+        $db = new DB_Admin();
+        foreach ($escoSuggestions as $uri => $skill) {
+            // Get embedding from database.
+            $label = utf8_decode($skill['label']);
+            $stichwortlabel = preg_replace('/ *\(.*\)/', '', $label);
+            $labels = array($label);
+            if ($stichwortlabel != $label) {
+                $labels[] = $stichwortlabel;
+            }
+            $escolabel = $label . ' (ESCO)';
+            if ($escolabel != $label) {
+                $labels[] = $escolabel;
+            }
+            $labels = join("', '", $labels);
+            $sql = "SELECT se.embedding, se.search_count
+                    FROM stichwoerter s
+                    LEFT JOIN scout_stichwoerter se 
+                        ON se.stichwort_id = s.id 
+                    WHERE s.stichwort IN ('$labels')
+                    AND se.embedding IS NOT NULL";
+            $db->query($sql);
+            if ($db->next_record() && isset($db->Record["embedding"])) {
+                $escoSuggestions[$uri]['similarity'] = $this->pythonAPI->cosineSimilarity($occupationEmbedding, json_decode($db->Record["embedding"]));
+                $escoSuggestions[$uri]['search_count'] = $db->Record["search_count"];
+            } else {
+                $escoSuggestions[$uri]['similarity'] = 0;
+                $escoSuggestions[$uri]['search_count'] = 0;
+            }
+        }
+
+        // Calculate the maximum and minimum search count.
+        $minSearchCount = min(array_column($escoSuggestions, 'search_count'));
+        $maxSearchCount = max(array_column($escoSuggestions, 'search_count')) - $minSearchCount;
+        if ($maxSearchCount == 0) {
+            $maxSearchCount = 1;
+        }
+
+        // Calculate the maximum and minimum similarity.
+        $minSimilarity =  min(array_column($escoSuggestions, 'similarity')); // Minimum similarity value.
+        $maxSimilarity = max(array_column($escoSuggestions, 'similarity')); // Maximum similarity value.
+
+        $similarityWeight = 0.8;
+        $searchCountWeight = 1 - $similarityWeight;
+
+        // Calculate the final score for each skill.
+        foreach ($escoSuggestions as &$suggestion) {
+            $similarity = (float) $suggestion['similarity'];
+            $searchCount = (int) $suggestion['search_count'] - $minSearchCount;
+
+            // Normalize similarity to a value between 0 and 1.
+            $normalizedSimilarity = ($similarity - $minSimilarity) / ($maxSimilarity - $minSimilarity);
+            $normalizedSimilarity = max(0, min(1, $normalizedSimilarity));
+            $suggestion['similarity_normalized'] = $normalizedSimilarity;
+
+            // Normalize search count to a value between 0 and 1.
+            $searchCountNormalized = $maxSearchCount !== 0 ? $searchCount / $maxSearchCount : 0;
+            $suggestion['search_count_normalized'] = $searchCountNormalized;
+
+            $finalScore = ($similarityWeight * $normalizedSimilarity) + ($searchCountWeight * $searchCountNormalized);
+            $suggestion['final_score'] = $finalScore;
+        }
+
+        // Sort the skills based on the final score.
+        usort($escoSuggestions, function ($a, $b) {
+            if ($a['final_score'] > $b['final_score']) {
+                return -1;
+            } elseif ($a['final_score'] < $b['final_score']) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+
+        return $escoSuggestions;
     }
 
     /**
@@ -382,8 +472,7 @@ class WISY_KI_ESCO_CLASS {
      * @param int $limit
      * @return array [{"label":"title1","value":"url1"},{"label":"title2","value":"url2"}]
      */
-    function search_wisy($term, $limit = 5, $sheme = "")
-    {
+    function search_wisy($term, $limit = 5, $sheme = "") {
         $tags = array();
         if ($sheme == "sachstichwort_red") {
             require_once($_SERVER['DOCUMENT_ROOT'] . '/admin/WisyKi/lib/search/wisy_search.inc.php');
@@ -396,10 +485,10 @@ class WISY_KI_ESCO_CLASS {
 
         foreach ($tags as $tag) {
             if ($tag["tag_freq"])
-            $search_results[] = [
-                "label" =>  utf8_encode($tag["tag"]),
-                "uri" => utf8_encode($tag["tag"]),
-            ];
+                $search_results[] = [
+                    "label" =>  utf8_encode($tag["tag"]),
+                    "uri" => utf8_encode($tag["tag"]),
+                ];
         }
 
         return $search_results;
@@ -413,7 +502,7 @@ class WISY_KI_ESCO_CLASS {
      * @return array Array containing skills that have equivalent tags in the wisy databse.
      */
     function filter_is_relevant(array $skills): array {
-		global $wisyPortalId;
+        global $wisyPortalId;
         $db = new DB_Admin();
         $filtered = array();
         foreach ($skills as $index => $skill) {
@@ -458,13 +547,13 @@ class WISY_KI_ESCO_CLASS {
             $res = 0;
             foreach (array_reverse($schemes) as $scheme) {
                 $counter++;
-                    $schemelimit = $counter * $minlimit - $res;
+                $schemelimit = $counter * $minlimit - $res;
                 if ($scheme == 'extended-skills-hierarchy') {
                     $results = array_merge($results, $this->search_skills_hierarchy($term, $schemelimit));
                 } else if ($scheme == 'sachstichwort' || $scheme == 'sachstichwort_red') {
                     //additional scheme to mark search from Redaktionsmaske (Karl Weber)
-               $sachstichworte = $this->search_wisy($term, $schemelimit, $scheme);
-                   $res = count($sachstichworte);
+                    $sachstichworte = $this->search_wisy($term, $schemelimit, $scheme);
+                    $res = count($sachstichworte);
                 } else {
                     $results = array_merge($results, $this->search_api($term, $type, $scheme, $schemelimit, $filterconcepts));
                     $res = count($results);
@@ -492,7 +581,7 @@ class WISY_KI_ESCO_CLASS {
                     }
                 }
                 if (!$duplicate) {
-                    
+
                     $stichwort['uri'] = "";
                     $results[] = $stichwort;
                 }
@@ -506,12 +595,12 @@ class WISY_KI_ESCO_CLASS {
         if ($onlyrelevant) {
             $results = $this->filter_is_relevant($results);
         }
-        
+
         // Skip sorting if "sachstichwort_red" in schemes
         if (is_array($schemes) and in_array('sachstichwort_red', $schemes)) {
             return $results;
         }
-        
+
         usort($results, function ($a, $b) use ($term) {
             return $this->sort_term_first($a, $b, $term);
         });
@@ -532,7 +621,7 @@ class WISY_KI_ESCO_CLASS {
         $a_label = strtolower($a["label"]);
         $b_label = strtolower($b["label"]);
         $searchterm = strtolower($searchterm);
-    
+
         $a_starts_with_search_string = (substr($a_label, 0, strlen($searchterm)) === $searchterm);
         $b_starts_with_search_string = (substr($b_label, 0, strlen($searchterm)) === $searchterm);
 
@@ -617,7 +706,7 @@ class WISY_KI_ESCO_CLASS {
             foreach ($response['_links']['broaderSkill'] as $broaderSkill) {
                 $result['similarSkills']['broader'][] = $broaderSkill['title'];
             }
-        } 
+        }
         if (isset($response['_links']['broaderHierarchyConcept']) && !empty($response['_links']['broaderHierarchyConcept'])) {
             foreach ($response['_links']['broaderHierarchyConcept'] as $broaderHierarchyConcept) {
                 $result['similarSkills']['broader'][] = $broaderHierarchyConcept['title'];
@@ -638,7 +727,7 @@ class WISY_KI_ESCO_CLASS {
                 $result['similarSkills']['narrower'][] = $isEssentialForSkill['title'];
             }
         }
-        
+
 
         return $result;
     }
@@ -733,8 +822,14 @@ class WISY_KI_ESCO_CLASS {
             $onlyrelevant = strtolower($_GET['onlyrelevant']) === 'true' ? true : (strtolower($_GET['onlyrelevant']) === 'false' ? false : JSONResponse::error401($_GET['onlyrelevant'] . ' is not a valid value for onlyrelevant.'));
         }
 
+        // Get $context parameter.
+        $context = "";
+        if (isset($_GET['context']) && !empty($_GET['context'])) {
+            $context = $_GET['context'];
+        }
+
         // Get the skills for the specified concept and send the JSON response.
-        JSONResponse::send_json_response($this->getSkillsOf($uri, $onlyrelevant));
+        JSONResponse::send_json_response($this->getSkillsOf($uri, $onlyrelevant, $context));
     }
 
     /**

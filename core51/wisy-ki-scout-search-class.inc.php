@@ -47,6 +47,12 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 		$this->langlevelids = $this->getTagIds(array('A1', 'A2', 'B1', 'B2', 'C1', 'C2'));
 	}
 
+	/**
+	 * Get the tag ids for a given array of tag names.
+	 *
+	 * @param array $tags The tag names.
+	 * @return array The tag ids.
+	 */
 	function getTagIds (array $tags) {
 		
 		$levelids = array();
@@ -61,7 +67,7 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 	/**
 	 * Get the querystring based on the skill label and level.
 	 *
-	 * @param ocject $skills The skills to search for.
+	 * @param object $skills The skills to search for.
 	 * @param object $filters Filtersettings to narrow the search results.
 	 * @return string The querystring.
 	 */
@@ -170,11 +176,20 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 			}
 		}
 
+		// Only get courses with tags Berufliche Bildung or Sprache.
 		$querystring .= ', Berufliche Bildung ODER Sprache';
 
 		return $querystring;
 	}
 
+	/**
+	 * Search for courses based on the skill label and level and set filters using the search methods of the parent class.
+	 *
+	 * @param object $skills The skills to search for.
+	 * @param object $filters Filtersettings to narrow the search results.
+	 * @param int $limit The maximum number of results to return.
+	 * @return object The search results.
+	 */
 	function search($skills, $filters, $limit) {
 		$matches = array();
 		$querystring = $this->get_querystring($skills, $filters);
@@ -205,6 +220,41 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 		return $matches;
 	}
 
+	// Function that takes an array of skills count up the statistics that describe how often a particular skill was searched for.
+	// Update the database table scout_stichwoerter by counting up column seach_count by one for each skill identified by its stichwort_id that corresponds to the stichoerter.id column. get skills by name from stichwoerter.stichwort.
+	/**
+	 * Update search statistics for skills.
+	 * 
+	 * @param stdClass $skills The skills to update the statistics for.
+	 * @return void
+	 */
+	function update_search_statistics(stdClass $skills) {
+        $db = new DB_Admin();
+		foreach ($skills as $skill) {
+			// Update search count for skill.
+			$label = utf8_decode($skill->label);
+            $stichwortlabel = preg_replace('/ *\(.*\)/', '', $label);
+            $labels = array($label);
+            if ($stichwortlabel != $label) {
+                $labels[] = $stichwortlabel;
+            }
+            $escolabel = $label . ' (ESCO)';
+            if ($escolabel != $label) {
+                $labels[] = $escolabel;
+            }
+            $labels = join("', '", $labels);
+			$sql = "Update scout_stichwoerter se
+					INNER JOIN stichwoerter s ON se.stichwort_id = s.id
+					SET se.search_count = se.search_count + 1
+					WHERE s.stichwort IN ('$labels')";
+			
+			if (!$this->db->query($sql)) {
+				JSONResponse::error500('Error while updating search statistics for skill: ' . $label);
+			}
+		}
+	}
+
+
 	/**
 	 * Renders the search results after preparing the search based on the skill label and level.
 	 *
@@ -219,6 +269,9 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 		$occupation = $data->occupation;
 		$filters = $data->filters;
 		$limit = $data->limit;
+
+		// Update search statistics for skills.
+		$this->update_search_statistics($skills);
 
 		// Get search results for every skill.
 		$results = $this->search($skills, $filters, $limit);

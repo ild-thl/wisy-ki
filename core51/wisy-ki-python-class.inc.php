@@ -367,6 +367,7 @@ class WISY_KI_PYTHON_CLASS {
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLINFO_HEADER_OUT, true);
         curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_TIMEOUT, max(10, count($documents) / 2));
 
         // Set HTTP Header for POST request 
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
