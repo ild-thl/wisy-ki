@@ -6,19 +6,29 @@
 {{ ^maxskills }}
 <p>{{{ lang.occupationskillsstep:subheading }}}</p>
 {{ /maxskills }}
-
+<dialog class="help-modal modal">
+    <article>{{{ lang.occupationskillsstep:help }}}</article>
+    <button type="button" class="close-help-modal-btn btn-link" title="{{ lang.help:understood }}">{{ lang.help:understood }}</button>
+</dialog>
+<button type="button" class="open-help-modal-btn btn-link" title="{{ lang.help }}"><i class="icon help-icon"></i>{{lang.occupationskillsstep:helpintro}}</button>
 <section class="selectable-skills">
     <article class="occupationskills">
         <p class="skill-counter"></p>
         <ul>
             {{ #skills }}
             <li>
-                <input type="checkbox" id="occupationskills:{{ uri }}" skilluri="{{ uri }}" skilllabel="{{ label }}" data-protonpass-ignore="">
+                <input type="checkbox" id="occupationskills:{{ uri }}" skilluri="{{ uri }}" skilllabel="{{ label }}">
                 <label for="occupationskills:{{ uri }}">{{ label }}</label>
             </li>
             {{ /skills }}
         </ul>
     </article>
+    {{ #showmore }}
+    <div class="button-list">
+        <button type="button" class="btn-primary" id="occupationskills-showmore">{{ lang.occupationskillsstep:showmore }}</button>
+        <button type="button" class="btn-primary" id="occupationskills-showless">{{ lang.occupationskillsstep:showless }}</button>
+    </div>
+    {{ /showmore }}
 </section>
 {{ /skillsfound }}
 {{ ^skillsfound }}

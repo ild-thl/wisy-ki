@@ -4,6 +4,11 @@
 {{ ^occupation }}
 <h2>{{ lang.skillsstep:headingwithoutoccupation }}</h2>
 {{ /occupation }}
+<dialog class="help-modal modal">
+    <article>{{{ lang.skillsstep:help }}}</article>
+    <button type="button" class="close-help-modal-btn btn-link" title="{{ lang.help:understood }}">{{ lang.help:understood }}</button>
+</dialog>
+<button type="button" class="open-help-modal-btn btn-link" title="{{ lang.help }}"><i class="icon help-icon"></i>{{lang.skillsstep:helpintro}}</button>
 <p class="skill-counter"></p>
 <section class="autocomplete-box">
     <div class="autocomplete-box__input">

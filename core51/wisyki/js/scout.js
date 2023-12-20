@@ -679,29 +679,6 @@ class Path {
         });
 
         this.stepNumberIndicator = this.node.querySelector(".steptext");
-
-        // Set up the level explanation modal and its associated button.
-        this.openHelpModalBtn = this.node.querySelector(".open-modal-btn");
-        this.helpModal = this.node.querySelector(".modal");
-        if (this.openHelpModalBtn && this.helpModal) {
-            this.openHelpModalBtn.addEventListener("click", () => this.toggleHelp());
-
-            // Close the modal if the close button is clicked or somewhere outside of the modal.
-            this.helpModal.addEventListener(
-                "click",
-                (event) => {
-                    if (
-                        event.target.closest(".close-modal-btn") ||
-                        event.target.matches(".modal__backdrop")
-                    ) {
-                        hide(this.helpModal);
-                    }
-                },
-                false
-            );
-
-            this.help = this.node.querySelector(".modal__content article");
-        }
     }
 
     /**
@@ -765,18 +742,6 @@ class Path {
 
         this.currentStep.showLoader();
 
-        // Update Helpmodal content.
-        if (this.help && this.openHelpModalBtn) {
-            const helpText = Lang.getString(
-                this.currentStep.name + "step:help"
-            );
-            this.help.innerHTML = helpText;
-            if (helpText) {
-                show(this.openHelpModalBtn);
-            } else {
-                hide(this.openHelpModalBtn);
-            }
-        }
         // Update Loader text content.
         const loadertext =
             this.currentStep.loader.querySelector(".loader__text");
@@ -880,17 +845,6 @@ class Path {
         data.name = this.name;
         data.label = Lang.getString(this.name + "path:label");
         return data;
-    }
-
-    /**
-     * Toggles the display of the help modal.
-     */
-    toggleHelp() {
-        if (this.helpModal.classList.contains("display-none")) {
-            show(this.helpModal);
-        } else {
-            hide(this.helpModal);
-        }
     }
 }
 
@@ -1072,7 +1026,11 @@ class Step {
      */
     async render() {
         await this.prepareTemplate();
-        const html = await Lang.render(this.name + "-step", this.data, this.partials);
+        const html = await Lang.render(
+            this.name + "-step",
+            this.data,
+            this.partials
+        );
         this.node.innerHTML = html;
 
         this.initRender();
@@ -1081,7 +1039,24 @@ class Step {
     /**
      * Initializes the rendered step.
      */
-    initRender() {}
+    initRender() {
+        let helpModal = this.node.querySelector(".help-modal");
+        let openHelpModalBtn = this.node.querySelector(
+            ".help-modal + .open-help-modal-btn"
+        );
+        let closeHelpModalBtn = this.node.querySelector(
+            ".help-modal .close-help-modal-btn"
+        );
+        if (openHelpModalBtn && closeHelpModalBtn && helpModal) {
+            openHelpModalBtn.addEventListener("click", () => {
+                helpModal.showModal();
+                helpModal.scrollTop = 0;
+            });
+            closeHelpModalBtn.addEventListener("click", () =>
+                helpModal.close()
+            );
+        }
+    }
 
     /**
      * Shows the loader for the step.
@@ -1228,7 +1203,7 @@ class Step {
      * @returns {string}
      */
     getPrevButtonContent() {
-        return '<i class="icon arrow-icon"></i>';
+        return '<i class="icon backward-arrow-icon"></i>';
     }
 
     /**
@@ -1236,7 +1211,7 @@ class Step {
      * @returns {string}
      */
     getNextButtonContent() {
-        return '<i class="icon arrow-icon"></i>';
+        return '<i class="icon forward-arrow-icon"></i>';
     }
 }
 
@@ -1266,6 +1241,7 @@ class PathStep extends Step {
 
     /**
      * Initializes the rendering of the PathStep.
+     * @override Step.initRender
      */
     initRender() {
         super.initRender();
@@ -1347,6 +1323,7 @@ class OccupationStep extends Step {
 
     /**
      * Initializes the rendering of the OccupationStep.
+     * @override Step.initRender
      */
     initRender() {
         super.initRender();
@@ -1415,10 +1392,22 @@ class OccupationSkillsStep extends Step {
     occupation;
 
     /**
+     * The last selected skills.
+     * @type {any}
+     */
+    skills;
+
+    /**
      * The maximum number of skills that can be selected.
      * @type {number}
      */
     maxSkills;
+
+    /**
+     * The number of skills that are visible by default.
+     * @type {number}
+     */
+    visibleSkillsCount = 10;
 
     /**
      * The template for the skill counter.
@@ -1484,6 +1473,7 @@ class OccupationSkillsStep extends Step {
 
     /**
      * Initializes the rendering of the OccupationSkillsStep.
+     * @override Step.initRender
      */
     initRender() {
         super.initRender();
@@ -1518,6 +1508,75 @@ class OccupationSkillsStep extends Step {
                     this.updateSkillSelection(this.checkboxes);
                 })
             );
+
+            // Check if the show more button is needed
+            if (this.data.showmore) {
+                // Get the show more and show less buttons
+                const showMoreButton = document.getElementById(
+                    "occupationskills-showmore"
+                );
+                const showLessButton = document.getElementById(
+                    "occupationskills-showless"
+                );
+
+                // Get all the skills
+                const skillsList = this.skillsNode.querySelectorAll("li");
+
+                console.log(skillsList);
+
+                // Hide the skills beyond the initial visible count
+                for (
+                    let i = this.visibleSkillsCount;
+                    i < skillsList.length;
+                    i++
+                ) {
+                    skillsList[i].style.display = "none";
+                }
+
+                // Hide the show less button
+                showLessButton.style.display = "none";
+
+                // Add event listener to the show more button
+                showMoreButton.addEventListener("click", () => {
+                    console.log("show more");
+                    console.log(this.visibleSkillsCount);
+                    console.log(skillsList.length);
+
+                    // Show all the skills
+                    for (
+                        let i = this.visibleSkillsCount;
+                        i < skillsList.length;
+                        i++
+                    ) {
+                        console.log(skillsList[i]);
+                        skillsList[i].style.display = "flex";
+                    }
+
+                    // Hide the show more button
+                    showMoreButton.style.display = "none";
+
+                    // Show the show less button
+                    showLessButton.style.display = "inline-block";
+                });
+
+                // Add event listener to the show less button
+                showLessButton.addEventListener("click", () => {
+                    // Hide the extra skills beyond the initial visible count
+                    for (
+                        let i = this.visibleSkillsCount;
+                        i < skillsList.length;
+                        i++
+                    ) {
+                        skillsList[i].style.display = "none";
+                    }
+
+                    // Show the show more button
+                    showMoreButton.style.display = "inline-block";
+
+                    // Hide the show less button
+                    showLessButton.style.display = "none";
+                });
+            }
         }
 
         this.skillCounterNode = this.node.querySelector(".skill-counter");
@@ -1701,6 +1760,7 @@ class SkillsStep extends Step {
 
     /**
      * Initializes the rendering of the SkillsStep.
+     * @override Step.initRender
      */
     initRender() {
         super.initRender();
@@ -1967,6 +2027,7 @@ class LevelCurrentStep extends Step {
 
     /**
      * Initialize the rendering of the level goal step.
+     * @override Step.initRender
      */
     initRender() {
         super.initRender();
@@ -2128,6 +2189,7 @@ class LevelGoalStep extends Step {
 
     /**
      * Initialize the rendering of the level goal step.
+     * @override Step.initRender
      */
     initRender() {
         super.initRender();
@@ -2354,12 +2416,12 @@ class SearchStep extends Step {
         }
         const params = {
             skills: skills,
-            occupation:this.scout.account.getOccupation(),
+            occupation: this.scout.account.getOccupation(),
             filters: this.scout.account.getFilters(),
         };
 
         const newState = JSON.stringify(params);
-    
+
         if (this.lastState == newState) {
             return false;
         }
@@ -2371,7 +2433,7 @@ class SearchStep extends Step {
      * Controls whether the view should be rebuilt when the step runs an update.
      * @type {boolean}
      */
-    rebuildOnUpdate()  {
+    rebuildOnUpdate() {
         return true;
     }
 
@@ -2482,6 +2544,7 @@ class CourseListStep extends SearchStep {
 
     /**
      * Initialize rendering for the course list step.
+     * @override Step.initRender
      */
     initRender() {
         super.initRender();
@@ -2589,7 +2652,7 @@ class CourseListStep extends SearchStep {
      */
     setupCourseViewAction(courselistNode) {
         const viewBtns = courselistNode.querySelectorAll(".to-course-btn");
-         viewBtns.forEach((btn) => {
+        viewBtns.forEach((btn) => {
             // Mark favourites.
             const courseid = btn.getAttribute("courseid");
 
@@ -2685,7 +2748,7 @@ class CourseListStep extends SearchStep {
      */
     async updateCourseResults() {
         // Get course suggestions and set template data.
-        const newState = this.updateState(); 
+        const newState = this.updateState();
         if (!this.scout.searchResults || newState) {
             const results = await this.search();
             if (results) {
@@ -2758,7 +2821,7 @@ class CourseListStep extends SearchStep {
                     skill.isOccupationSkill,
                     skill.similarSkills
                 );
-        
+
                 this.updateState();
                 this.updateCourseResult(skill, complevelFilter.parentNode);
             });
@@ -2841,6 +2904,7 @@ class CourseViewStep extends Step {
 
     /**
      * Initialize rendering for the course list step.
+     * @override Step.initRender
      */
     initRender() {
         super.initRender();
@@ -2874,8 +2938,8 @@ class CourseViewStep extends Step {
      */
     isRendered() {
         return (
-            document.querySelector(`#${this.name} .step`).children.length !== 0 &&
-            this.selectedCourse == this.scout.selectedCourse
+            document.querySelector(`#${this.name} .step`).children.length !==
+                0 && this.selectedCourse == this.scout.selectedCourse
         );
     }
 
@@ -3029,6 +3093,7 @@ class CheckboxFilter extends Filter {
 
     /**
      * Initialize rendering of the checkbox filter.
+     * @override Filter.initRender
      */
     initRender() {
         super.initRender();
@@ -3163,6 +3228,7 @@ class LocationFilter extends Filter {
 
     /**
      * Initialize rendering of the location filter.
+     * @override Filter.initRender
      */
     initRender() {
         this.node = this.menu.node.querySelector("#filter-" + this.name);
@@ -3259,6 +3325,7 @@ class PriceFilter extends Filter {
 
     /**
      * Initialize rendering of the price filter.
+     * @override Filter.initRender
      */
     initRender() {
         super.initRender();
@@ -3674,6 +3741,7 @@ class Autocompleter {
      */
     updateCompletions(completions, requestid) {
         if (requestid < this.requestID) {
+            // If the request ID is lower than the current request ID, the request is outdated and should be ignored.
             return;
         }
         this.clearOutput();
@@ -3766,6 +3834,7 @@ class Autocompleter {
             return await response.json();
         } else {
             console.error("HTTP-Error: " + response.status);
+            return [];
         }
     }
 

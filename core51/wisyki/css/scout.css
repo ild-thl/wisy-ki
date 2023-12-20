@@ -312,8 +312,12 @@ nav a .bubble {
     background-image: url('/files/wisyki/account_blue_24dp.svg');
 }
 
-.arrow-icon {
+.forward-arrow-icon {
     background-image: url('/files/wisyki/arrow_forward_ios_black_24dp.svg');
+}
+
+.backward-arrow-icon {
+    background-image: url('/files/wisyki/arrow_backward_ios_black_24dp.svg');
 }
 
 .close-icon {
@@ -609,10 +613,6 @@ header p {
     justify-self: flex-end;
 }
 
-#prev-step .icon {
-    transform: scale(-1);
-}
-
 /* Main */
 main .steps {
     position: relative;
@@ -719,12 +719,22 @@ main .steps>div {
 }
 
 .step-container {
-    margin-top: 5px;
-    padding-top: 3em;
+    padding-top: 2em;
     min-width: 100vw;
     height: 100%;
     overflow: auto;
     position: relative;
+}
+
+.scroll-fade {
+    position: sticky;
+    top: -2em;
+    left: 0;
+    right: 0;
+    height: 1em;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0), rgb(255, 255, 255));
+    pointer-events: none;
+    z-index: 1;
 }
 
 
@@ -734,13 +744,6 @@ main .steps>div {
     margin: 0 auto;
     margin-bottom: 2em;
     position: relative;
-}
-
-.help {
-    position: fixed;
-    bottom: 100px;
-    right: 1em;
-    z-index: 100;
 }
 
 .abort {
@@ -755,12 +758,6 @@ main .steps>div {
 .modal {
     z-index: -1;
     position: relative;
-}
-
-.help-modal {
-    width: 80vw;
-    max-height: 80vh;
-    max-width: 400px;
 }
 
 .abort-modal {
@@ -794,7 +791,53 @@ main .steps>div {
     z-index: -100;
 }
 
-.help-modal .modal__content,
+::backdrop {
+    background-color: #00000026;
+}
+
+.help-modal {
+    width: 80vw;
+    max-height: 65vh;
+    max-width: 400px;
+    background: var(--main-background-color);
+    padding: 2em;
+    box-shadow: 0px 0px 8px #0000005c;
+    border: none;
+    border-radius: 25px;
+    
+    /* Center the modal */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.close-help-modal-btn {
+    float: right;
+    padding: 0.5em;
+    margin-top: 1em;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--main-color__highlight);
+}
+
+.open-help-modal-btn {
+    padding: .8em 0em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.open-help-modal-btn .icon {
+    min-width: 16px;
+    min-height: 16px;
+    background-size: contain;
+}
+
+.open-help-modal-btn span {
+    text-decoration: underline;
+}
+
 .abort-modal .modal__content {
     background: var(--main-background-color);
     padding: 2em;
@@ -806,64 +849,28 @@ main .steps>div {
     border-radius: 10px;
 }
 
-.help-modal .modal__content {
-    transform: translate(-24px, 28px);
-    border-radius: 25px;
-    max-height: 65vh;
-    overflow: auto;
-}
-
-.help-modal .modal__content::-webkit-scrollbar,
-.abort-modal .modal__content::-webkit-scrollbar {
+.modal::-webkit-scrollbar {
     background-color: transparent;
     width: 5px;
 }
 
-.help-modal .modal__content::-webkit-scrollbar-thumb,
-.abort-modal .modal__content::-webkit-scrollbar-thumb {
+.modal::-webkit-scrollbar-thumb {
     background-color: var(--font-color__soft);
     background-color: transparent;
     border-radius: 10px;
 }
 
-.modal__content h3 {
+.modal h3 {
     margin-bottom: 1em;
 }
 
-.modal__content h4 {
+.modal::-webkit-scrollbar-thumb h4 {
     margin-top: .3em;
 }
 
-.modal__content ul {
+.modal ul {
     margin: .5em 0;
     margin-inline-start: 2em;
-}
-
-.open-modal-btn {
-    background: var(--secondary-background-color);
-    border-radius: 100%;
-    padding: .8em;
-    float: right;
-}
-
-.open-modal-btn .icon {
-    min-width: 32px;
-    min-height: 32px;
-    background-size: contain;
-}
-
-.open-modal-btn span {
-    text-decoration: underline;
-}
-
-
-.help-modal .close-modal-btn {
-    float: right;
-    padding: 0.5em;
-    margin-top: 1em;
-    font-size: 1.2em;
-    font-weight: bold;
-    color: var(--main-color__highlight);
 }
 
 .abort-modal .modal__content>.close-modal-btn {
@@ -1019,7 +1026,6 @@ input[type="text"] {
     padding-inline: 0;
     padding: .8em 0em;
     margin-top: .3em;
-    margin-bottom: 1em;
 }
 
 .selectable-skills li {
@@ -1044,6 +1050,11 @@ input[type="text"] {
     justify-content: center;
     gap: 2em;
     margin-top: 2em;
+}
+
+#occupationskills .selectable-skills .button-list {
+    margin: 0;
+    justify-content: flex-start;
 }
 
 /* Step currentLevel */
@@ -1285,7 +1296,6 @@ p.current-level {
 
 .heading icon {
     color: var(--main-color);
-    ;
 }
 
 .heading button .filter-bubble {
@@ -1376,7 +1386,7 @@ details[open]>summary::after {
     gap: .5em;
     align-items: center;
     position: sticky;
-    top: -42px;
+    top: -2em;
     background-color: white;
     z-index: 20;
 }
@@ -1404,8 +1414,6 @@ details[open]>summary::after {
     position: relative;
 }
 
-
-
 .result-list .airecommends summary {
     padding-top: 2px;
     border-radius: 3px;
@@ -1430,13 +1438,13 @@ details[open]>summary::after {
 }
 
 .complevel-filter {
-    padding: 1em .5em;
+    padding: 1em 0em;
     display: flex;
     flex-direction: row;
     gap: 5px;
     border: none;
     position: sticky;
-    top: -16px;
+    top: 0em;
     background-color: white;
     z-index: 10;
     box-shadow: 0px 4px 4px -3px rgba(0, 0, 0, 0.2);
@@ -1883,10 +1891,6 @@ main .steps {
 .virtual-keyboard-shown main .steps>div {
     height: 100vh - 60px;
     height: calc(var(--doc-height) - 60px);
-}
-
-.virtual-keyboard-shown .help {
-    bottom: 20px;
 }
 
 

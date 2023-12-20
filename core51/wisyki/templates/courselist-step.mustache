@@ -2,5 +2,10 @@
     <h2>{{ lang.courseliststep:heading }}</h2>
     <button class="labeled-icon-btn filter-btn btn-secondary"><i class="icon filter-icon"></i>{{lang.courseliststep:filter}}<span class="filter-bubble display-none"></span></button>
 </div>
+<dialog class="help-modal modal">
+    <article>{{{ lang.courseliststep:help }}}</article>
+    <button type="button" class="close-help-modal-btn btn-link" title="{{ lang.help:understood }}">{{ lang.help:understood }}</button>
+</dialog>
+<button type="button" class="open-help-modal-btn btn-link" title="{{ lang.help }}"><i class="icon help-icon"></i>{{lang.courseliststep:helpintro}}</button>
 <ul class="result-list"></ul>
 {{ >filtermenu }}

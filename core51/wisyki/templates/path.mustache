@@ -24,6 +24,7 @@
     <div>
         {{ #steps }}
         <div class="step-container" id="{{ name }}">
+            <div class="scroll-fade"></div> <!-- Add the scroll-fade element -->
             <div class="loader">
                 <div class="spinner"></div>
                 <p class="loader__text"></p>
@@ -32,16 +33,6 @@
         </div>
         {{ /steps }}
     </div>
-    <section class="help">
-        <div class="modal help-modal display-none">
-            <div class="modal__backdrop"></div>
-            <div class="modal__content">
-                <article>{{{ lang.skillstep:help }}}</article>
-                <button type="button" class="close-modal-btn btn-link" title="{{ lang.help:understood }}">{{ lang.help:understood }}</button>
-            </div>
-        </div>
-        <button type="button" class="open-modal-btn btn-link" title="{{ lang.help }}"><i class="icon help-icon"></i></button>
-    </section>
     <section class="abort">
         <div class="modal abort-modal display-none">
             <div class="modal__backdrop"></div>

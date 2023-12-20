@@ -1,4 +1,9 @@
 <h2>{{ lang.pathchoicestep:heading }}</h2>
+<dialog class="help-modal modal">
+    <article>{{{ lang.pathchoicestep:help }}}</article>
+    <button type="button" class="close-help-modal-btn btn-link" title="{{ lang.help:understood }}">{{ lang.help:understood }}</button>
+</dialog>
+<button type="button" class="open-help-modal-btn btn-link" title="{{ lang.help }}"><i class="icon help-icon"></i>{{lang.pathchoicestep:helpintro}}</button>
 <div class="button-list">
     {{ #paths }}
     <button type="button" pathname="{{ name }}" class="btn-primary">{{ label }}</button>
