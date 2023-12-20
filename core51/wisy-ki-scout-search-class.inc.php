@@ -161,7 +161,15 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 			}
 		}
 
-		// Complevel filter.
+		// Degree filter.
+		if (isset($filters->degree)) {
+			if ($filters->degree) {
+				$querystring .= ', ' . utf8_decode('ABSCHLÜSSE');
+			} else {
+				$querystring .= ', ' . utf8_decode('-ABSCHLÜSSE');
+			}
+		}
+
 		$querystring .= ', Berufliche Bildung ODER Sprache';
 
 		return $querystring;

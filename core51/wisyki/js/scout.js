@@ -3394,6 +3394,91 @@ class PriceFilter extends Filter {
 }
 
 /**
+ * Degree filter.
+ * Filter has two options resulting in true or false.
+ * @extends Filter
+ */
+class DegreeFilter extends Filter {
+    /**
+     * Represents the name of the filter.
+     * @type {string}
+     */
+    name = "degree";
+
+    /**
+     * Initialize rendering of the degree filter.
+     * @override Filter.initRender
+     */
+    initRender() {
+        super.initRender();
+
+        if (!this.selectedChoice) {
+            this.selectedChoice = null;
+        }
+
+        this.choices = this.node.querySelectorAll("input");
+        this.defaultChoice = this.choices[0];
+
+        this.loadChoice();
+    }
+
+    /**
+     * Set the selected choice of the degree filter or set default.
+     */
+    loadChoice() {
+        if (!this.selectedChoice) {
+            this.defaultChoice.checked = true;
+        } else {
+            const tobechecked = this.node.querySelector(
+                'input[value="' + this.selectedChoice + '"]'
+            );
+            if (tobechecked) {
+                tobechecked.checked = true;
+            }
+        }
+    }
+
+    /**
+     * Store the selected choice of the degree filter.
+     */
+    storeChoice() {
+        const selectedInput = this.node.querySelector(
+            'input[type="radio"]:checked'
+        );
+
+        if (selectedInput == this.defaultChoice) {
+            this.selectedChoice = null;
+        } else {
+            this.selectedChoice = selectedInput.value;
+        }
+
+        this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
+    }
+
+    /**
+     * Reset the price filter.
+     */
+    reset() {
+        this.selectedChoice = null;
+        this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
+        this.loadChoice();
+
+        super.reset();
+    }
+
+    /**
+     * Check if the price filter is active.
+     * @returns {boolean} A boolean representing wether the price filter is active or not.
+     */
+    isActive() {
+        if (this.selectedChoice !== null) {
+            return true;
+        }
+        return false;
+    }
+}
+
+/**
  * Class representing a FilterMenu.
  */
 class FilterMenu {
@@ -3437,13 +3522,14 @@ class FilterMenu {
         this.onChange = onChange;
 
         this.filters = [
+            new DegreeFilter(this),
             new CoursemodeFilter(this),
             new LocationFilter(this),
             new PriceFilter(this),
             new TimeofdayFilter(this),
             new FundingFilter(this),
         ];
-    
+
         this.templateName = "courselist-step-filter";
     }
 
