@@ -474,12 +474,13 @@ class WISY_KI_ESCO_CLASS {
      */
     function search_wisy($term, $limit = 5, $sheme = "") {
         $tags = array();
+        $not_relevant_tag_types = array(1, 65536, 2, 4, 8, 32768, 16, 32, 64, 128, 65, 256, 512, 1024, 2048, 4096, 8192, 16384, 131072, 262144);
         if ($sheme == "sachstichwort_red") {
             require_once($_SERVER['DOCUMENT_ROOT'] . '/admin/WisyKi/lib/search/wisy_search.inc.php');
-            $tags = suggestTags(utf8_decode($term), array("max" => $limit, 'q_tag_type_not' => array(1, 65536, 4, 8, 32768, 16, 32, 64, 128, 512, 1024, 2048, 4096, 8192, 16384, 65, 256)));
+            $tags = suggestTags(utf8_decode($term), array("max" => $limit, 'q_tag_type_not' => $not_relevant_tag_types));
         } else {
             $tagsuggestor = &createWisyObject('WISY_TAGSUGGESTOR_CLASS', $this->framework);
-            $tags = $tagsuggestor->suggestTags(utf8_decode($term), array("max" => $limit, 'q_tag_type_not' => array(1, 65536, 4, 8, 32768, 16, 32, 64, 128, 512, 1024, 2048, 4096, 8192, 16384, 65, 256)));
+            $tags = $tagsuggestor->suggestTags(utf8_decode($term), array("max" => $limit, 'q_tag_type_not' => $not_relevant_tag_types));
         }
         $search_results = array();
 
