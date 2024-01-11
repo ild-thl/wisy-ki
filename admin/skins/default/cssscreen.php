@@ -1,6 +1,6 @@
 <?php
 
-// ï¿½ï¿½ï¿½ (ISO8859!)
+// äöü (ISO8859!)
 
 // make sure, the file is cached
 header("Cache-Control: public");
@@ -224,14 +224,7 @@ form[name="dbsearch"] {
 ?>
 
 /*** common ***/
-input.esco {
-	color:<?php echo $link; ?>;
-}
 
-input.esco:hover {
-	cursor: pointer;
-	color:<?php echo $hover; ?>;
-}
 
 body {
 	font-family:Verdana,Arial,sans-serif; font-size:9pt;
@@ -498,7 +491,6 @@ input.addvalues {
 	background-color:white;
 }
 
-
 textarea.monospc {
 	font-size:1em; font-family:"Courier New",monospace;
 }
@@ -643,7 +635,6 @@ div.e_toolbar, div.e_section {
 	display: none;
 }
 
-
 /*attributes*/
 .e_attr {
 	border-bottom: 1px solid <?php echo $inputborder; ?>;
@@ -671,7 +662,7 @@ div.e_toolbar, div.e_section {
 
 
 /*attributes multiline*/
-.e_attrmultiline  .e_attritem .e_hint {
+.e_attrmultiline  .e_attritem {
 	display: block;
 }
 
@@ -686,18 +677,6 @@ div.e_toolbar, div.e_section {
 .e_attractype2048 { /*Verwaltungsstichwort: Gelb*/
 	background-color: #FFFFC0;
 }
-.e_attractype524288, .e_attractype524289, .e_attractype1048576 { /* ESCO-Typen */
-	background-color: #A2E9FF;
-}
-
-.v_attractype524288 { /* ESCO-Vorschlaege */
-	background-color: #EEEE00;
-}
-
-.s_attractype524288 { /* vorausgewaehlte ESCO-Vorschlaege */
-	background-color: #FF9C70;
-}
-
 
 
 /*attributes: references*/
@@ -863,7 +842,7 @@ input[name='resetlogin'] {
 	color: #777 !important;
 }
 
-div[data-descr="Durchfï¿½hrung"] + .e_tb {
+div[data-descr="Durchführung"] + .e_tb {
   border-top: 1px solid #eee;
   margin-bottom: 1em;
 }
@@ -875,11 +854,11 @@ div[data-descr="Durchfï¿½hrung"] + .e_tb {
 	font-size: 1em;
 }
 
-/* div[data-descr="Durchfï¿½hrung"] + .e_tb {
+/* div[data-descr="Durchführung"] + .e_tb {
   line-height: 1em;
 }
 
-div[data-descr="Durchfï¿½hrung"] + .e_tb * {
+div[data-descr="Durchführung"] + .e_tb * {
 	padding: 0px;
 } */
 

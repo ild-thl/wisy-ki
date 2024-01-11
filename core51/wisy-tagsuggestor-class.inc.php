@@ -18,7 +18,7 @@ class WISY_TAGSUGGESTOR_CLASS
 	//
 	// manually addeed suggestions, they must be defined in the settings using tag.<tag> = <other>;<another>;<com>,<bined>;<etc>
 	//
-	protected function get_manual_suggestions($tag_name)
+	private function get_manual_suggestions($tag_name)
 	{
 		$ret = array('sug' => array());
 		
@@ -219,8 +219,8 @@ class WISY_TAGSUGGESTOR_CLASS
 				    $tag_anbieter_id = '';
 				    $tag_groups = array();
 					
-					if( !isset($tags_done [ $tag_name ])   // kein Tag zweimal ausgeben (koennte passieren, wenn es sowohl durch die buchstabenadditive und duch die fehlertolerante Suche gefunden wuerde)
-					 && !isset($links_done[ $tag_name ]) ) // wenn zuvor auf ein lemma via Synonym verwiesen wurde, dieses Lemma nicht noch einmal einzeln hinzufügen
+					if( !$tags_done [ $tag_name ]   // kein Tag zweimal ausgeben (koennte passieren, wenn es sowohl durch die buchstabenadditive und duch die fehlertolerante Suche gefunden wuerde)
+					 && !$links_done[ $tag_name ] ) // wenn zuvor auf ein lemma via Synonym verwiesen wurde, dieses Lemma nicht noch einmal einzeln hinzufügen
 					{
 						$fuzzy = $tries==1? 0x20000000 : 0;
 						$tags_done[ $tag_name ] = 1;
@@ -381,7 +381,7 @@ class WISY_TAGSUGGESTOR_CLASS
 					}
 				}
 				
-				require_once("ki_admin/lib/soundex/x3m_soundex_ger.php");
+				require_once("admin/lib/soundex/x3m_soundex_ger.php");
 
 				// if there are only very few results, try an additional soundex search = has equal word value
 				if( sizeof((array) $ret) < $min && $use_soundex )

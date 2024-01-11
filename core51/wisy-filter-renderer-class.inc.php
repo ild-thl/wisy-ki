@@ -96,16 +96,10 @@ class WISY_FILTER_RENDERER_CLASS extends WISY_ADVANCED_RENDERER_CLASS
 			
 			// Anfrage anhand der Liste der $records['id']s die alle Durchführungs-Tags findet um enthaltene Tageszeit, Förderungen, Zielgruppe, Zertifikate, Unterrichtsart zu finden.
 			$renderformData['records_taglist'] = array();
-    		$this->db->query("SELECT DISTINCT t.tag_name as tagname, s.id as id FROM x_kurse_tags k LEFT JOIN x_tags t ON k.tag_id=t.tag_id LEFT JOIN stichwoerter s ON s.stichwort=t.tag_name WHERE k.kurs_id IN ($kursids)");
+    		$this->db->query("SELECT DISTINCT t.tag_name as tagname FROM x_kurse_tags k LEFT JOIN x_tags t ON k.tag_id=t.tag_id WHERE k.kurs_id IN($kursids)");
     		while( $this->db->next_record() )
     		{
     		    $renderformData['records_taglist'][] = $this->db->fcs8('tagname');
-				if (!empty($this->db->fcs8('id'))) {
-					$db2 = new DB_Admin();
-					$this->framework->loadDerivedTags($db2, $this->db->fcs8('id'), $renderformData['records_taglist'], "Synonyme");
-					$db2->free();
-				}
-
 			}
 			$this->db->free();
         }
@@ -138,7 +132,6 @@ class WISY_FILTER_RENDERER_CLASS extends WISY_ADVANCED_RENDERER_CLASS
 		$renderformData['fv_stadtteil'] = '';
 		$renderformData['fv_bezirk'] = '';
 		$renderformData['fv_volltext'] = '';
-		$renderformData['fv_niveau'] = '';
 		
 		// if(!is_array($this->framework->tokensQF))
 		//	return false;
@@ -249,12 +242,8 @@ class WISY_FILTER_RENDERER_CLASS extends WISY_ADVANCED_RENDERER_CLASS
 				    break;
 				    
 				case 'anbieter':
-					$renderformData['fv_anbieter'] = $token['value'];
-					break;
-				
-				case 'niveau':
-					$renderformData['fv_niveau'] = $token['value'];
-					break;
+				    $renderformData['fv_anbieter'] = $token['value'];
+				    break;
 			}
 		}
 		return $renderformData;
@@ -698,10 +687,6 @@ class WISY_FILTERMENU_ITEM
                 return $this->getSpezielleStichw(8, $data['datawhitelist'], false, $data['datablacklist']);
                 break;
                 
-			case 'niveau':
-				return $this->getSpezielleStichw(64, $data['datawhitelist']);
-			break;
-            
             case 'qualitaetszertifikate':
                 return $this->getSpezielleStichw(4, $data['datawhitelist'], false, $data['datablacklist']);
                 break;

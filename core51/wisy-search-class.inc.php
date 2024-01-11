@@ -34,7 +34,7 @@ Achtung: Leere Anfragen oder Leere Ergebnismengen sind _keine_ Fehler!
 
 *******************************************************************************/
 
-require_once('ki_admin/config/codes.inc.php');
+require_once('admin/config/codes.inc.php');
 
 class WISY_SEARCH_CLASS
 {
@@ -1450,6 +1450,7 @@ class WISY_SEARCH_CLASS
 	                       }
 	                   }
 	                 }
+	                 echo "<br><br><br><br>";
 	        
 	                            
 	        // add result to cache

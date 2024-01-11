@@ -21,12 +21,4 @@ config.inc.php
 .settings/*
 responsive_files
 weiterbildungsportal_files
-
-admin/stats/
-
-*.gz
 /.metadata/
-
-# ignore directories where course information needed for wisy@ki AI is stored
-/admin/lib/ki/python/data/
-*.bak

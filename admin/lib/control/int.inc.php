@@ -37,11 +37,7 @@ class CONTROL_INT_CLASS extends CONTROL_BASE_CLASS
 	    }
 	    
 	    // contains DF-ID if this a DF field
-		if(array_key_exists('controlTableRowID', $addparam)) {
-	    	$id = "input_" . $this->row_def->name . $addparam['controlTableRowID'];
-		} else {
-	    	$id = "input_" . $this->row_def->name;
-		}
+	    $id = "input_" . $this->row_def->name . $addparam['controlTableRowID'];
 	    $props = $this->row_def->prop;
 	    $intAsCheck = false;
 	    

@@ -320,8 +320,7 @@ define('DEF_STICHWORTTYP_QZERTIFIKAT',	4);
  Get the requested file
 *******************************************************************************/
 
-$request_uri = parse_url($_SERVER['REQUEST_URI']);
-$wisykiRequestPaths = explode('/', trim($request_uri['path'], '/'));
+
 $wisyRequestedFile = 'index.php';
 $requestURI = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
 if( preg_match('#/([^/\?]+)#', $requestURI, $temp) )
@@ -432,3 +431,4 @@ else if( @file_exists("$wisyCore/main.inc.php") )
 *******************************************************************************/
 
 error404();
+
