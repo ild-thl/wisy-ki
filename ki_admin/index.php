@@ -1180,7 +1180,7 @@ if ($select_numrows) {
 
 							if (find_in_blacklist($db->f('url'))) {
 								$site->skin->cellStart();
-								echo '<img src="skins/default/img/redgrid_sm.png" width="20" height="19" border="0" alt="" />';
+								echo '<img src="skins/default/img/icone.gif" width="20" height="19" border="0" alt="" />';
 								$site->skin->cellEnd();
 							}
 						} else

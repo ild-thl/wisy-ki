@@ -661,12 +661,12 @@ class EDIT_RENDERER_CLASS
 					echo '<tbody>';
 					echo '<tr>';
 					echo '<td class="sml" >';
-					echo '<span class="e_hint" title="Dieser Vorgang kann laenger als 30 Sekunden dauern und wird nach 60 Sekunden abgebrochen.">';
-					echo '<input class="esco" style="background-color: #FFE190; border-style: none" type="submit"  name="submit_esco" value="ESCO-Kompetenzvorschlaege">&nbsp&nbsp</input>';
-					echo '</span>';
+					// echo '<span class="e_hint" title="Dieser Vorgang kann laenger als 30 Sekunden dauern und wird nach 60 Sekunden abgebrochen.">';
+					// echo '<input class="esco" style="background-color: #FFE190; border-style: none" type="submit"  name="submit_esco" value="ESCO-Kompetenzvorschlaege">&nbsp&nbsp</input>';
+					// echo '</span>';
 					//echo '<div onclick="rem_esco_proposual(index.php?table=escocategories&rtypes=ESCO&orderby=kategorie ASC);" > ESCO-Suche nach Kompetenzen </div>';
-					echo '<span class="e_hint" title="ESCO-Kompetenzsuche mit Hilfe der ESCO-Hierarchie">';
-					echo '<a onclick="rem_esco_proposual(this); return;"  href="#index.php?table=escocategories&rtypes=ESCO&escolevel=1&orderby=kategorie ASC">Hierarchiesuche nach ESCO-Kompetenzen   </a>';
+					echo '<span class="e_hint" title="Dieser Vorgang kann laenger als 30 Sekunden dauern und wird nach 60 Sekunden abgebrochen.">';
+					echo '<input class="esco" style="background-color: #FFE190; border-style: none" type="submit"  name="submit_ki_esco" value="KI-ESCO-Kompetenzvorschlaege">&nbsp&nbsp</input>';
 					echo '</span>';
 					echo '<span class="e_hint" title="Alle angezeigten Kompetenzvorschlaege werden als Kompetenz uebernommen.">';
 					echo '<input class="esco"   style="background-color: #FFE190; border-style: none"  type="submit" name="submit_vorschlaege" value="Vorschlaege uebernehmen">&nbsp&nbsp</input>';
@@ -674,12 +674,12 @@ class EDIT_RENDERER_CLASS
 					echo '<span class="e_hint" title="Alle angezeigten Kompetenzvorschlaege werden geloescht.">';
 					echo '<input class="esco" style="background-color: #FFE190; border-style: none"  type="submit" name="submit_discard" value="Vorschlaege ablehnen">&nbsp&nbsp</input>';
 					echo '</span>';
-					echo '<span class="e_hint" title="Dieser Vorgang kann laenger als 30 Sekunden dauern und wird nach 60 Sekunden abgebrochen.">';
-					echo '<input class="esco" style="background-color: #FFE190; border-style: none" type="submit"  name="submit_ki_esco" value="KI-ESCO-Kompetenzvorschlaege">&nbsp&nbsp</input>';
-					echo '</span>';
 					echo '<span class="e_hint" title="Nur die vorausgewaehlten Kompetenzvorschlaege werden als Kompetenz uebernommen.">';
 					$boldout = ($this->bold_tocompetence) ? '; font-weight: bold' : '';
 					echo '<input class="esco"  style="background-color: #FFE190; border-style: none' . $boldout . '"  type="submit" name="submit_preselected" value="Vorausgewaehlte Vorschlaege uebernehmen">&nbsp&nbsp</input>';
+					echo '</span>';
+					echo '<span class="e_hint" title="ESCO-Kompetenzsuche mit Hilfe der ESCO-Hierarchie">';
+					echo '<a onclick="rem_esco_proposual(this); return;"  href="#index.php?table=escocategories&rtypes=ESCO&escolevel=1&orderby=kategorie ASC">Hierarchiesuche nach ESCO-Kompetenzen   </a>';
 					echo '</span>';
 					$boldout = ($this->bold_lock) ? '; font-weight: bold' : '';
 					echo '<span class="e_hint" title="Die vorausgewaehlten Kompetenzvorschlaege und Kompetenzen werden in die Blacklist aufgenommen.">';
@@ -954,6 +954,15 @@ class EDIT_RENDERER_CLASS
 						}
 						$id = $_SESSION['kursid'];
 					}
+					if ($table == "escoskills" || $table == "escocategories") {
+						if (is_array($res) && isset($res[0])) {
+							$res = blacklist_filter($res);
+							if (!(is_array($res) && isset($res[0]))) {
+								$site->msgAdd("\n" . "Diese Kompetenz ist gesperrt.", 'e');
+							}
+						}
+					}
+
 					if (is_array($res) && isset($res[0])) {               //create keywords
 						$newComp = new EDIT_DATA_CLASS(
 							null,
@@ -992,8 +1001,13 @@ class EDIT_RENDERER_CLASS
 							$newfound = $this->create_ref("kurse_stichwort", $id, $keyid, $db);
 							$newfound = $this->create_ref("kurse_kompetenz", $id, $keyid, $db, $r['uri']);
 						}
-						if (!$newfound)
-							$site->msgAdd("\n" . "Die KI lieferte kein neuen Ergebnisse. Eventuell liefert ein erneuter Aufruf Ergebnisse.", 'e');
+						if (!$newfound) {
+							if (!(is_array($res) && isset($res[0]))) {
+								$site->msgAdd("\n" . "Die KI lieferte kein neuen Ergebnisse. Eventuell liefert ein erneuter Aufruf Ergebnisse.", 'e');
+							} else {
+								$site->msgAdd("\n" . "Die Kompetenz konnte nicht zugeordnet werden.", 'e');
+							}
+						}
 					}
 					header('Location: \ki_admin\edit.php?table=kurse&id=' . $id);
 					exit;
@@ -1092,7 +1106,7 @@ class EDIT_RENDERER_CLASS
 					$db1 = new DB_Admin();
 					$db1->query("DELETE FROM kompetenz_blacklist WHERE id=$id");
 					header('Location: \ki_admin\edit.php?table=kurse&id=' . $_SESSION['kursid']);
-					$site->msgAdd("\n" . "Es wurde eine Kompetenz wieder fuer die Verwendung zugelassen.",'i');
+					$site->msgAdd("\n" . "Es wurde eine Kompetenz wieder fuer die Verwendung zugelassen.", 'i');
 					exit();
 				} else if (isset($_REQUEST['submit_discard'])) {
 					$db1 = new DB_Admin();

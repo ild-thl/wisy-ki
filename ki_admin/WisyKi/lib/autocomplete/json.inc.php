@@ -373,6 +373,7 @@ class AUTOCOMPLETE_JSON_CLASS
 						break;
 					} else {
 						$suggestions = $this->_handle_TABLE_TEXT($suggest_table, $suggest_field, $referencable_only, (isset($suggest_types)) ? $suggest_types : null);
+						$suggestions = blacklist_filter($suggestions,true);
 						break;
 					}
 				case TABLE_ENUM:
