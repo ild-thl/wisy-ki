@@ -18,6 +18,11 @@
         <ul class="course-list">
             {{ >courselist }}
         </ul>
+        {{ #extendedsearchuri }}
+        <div class="extended-search-link">
+            <a href="{{ . }}" target="blank" class="labeled-icon-btn btn-primary">{{ lang.courseliststep:extendedsearch }} ({{ countstring }})</a>
+        </div>
+        {{ /extendedsearchuri }}
     </details>
 </li>
 {{ /sets }}

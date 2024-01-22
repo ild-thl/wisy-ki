@@ -18,6 +18,7 @@
     "mostSkillsMatched": "Dieser Kurs vereint mehrere Kompetenzen",
     "semanticMatch": "Dieser Kurs passt inhaltlich zu dir zu {{ score }}%",
     "courseliststep:coursetitle": "Titel",
+    "courseliststep:extendedsearch": "Erweiterte Suche",
     "courseliststep:provider": "Anbieter",
     "courseliststep:levelgoal": "Lernziel",
     "courseliststep:na": "k.A.",

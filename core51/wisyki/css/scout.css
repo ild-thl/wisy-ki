@@ -1423,7 +1423,7 @@ details[open]>summary::after {
 }
 
 
-.course-list>li:not(:first-of-type):before {
+.course-list>li:not(:first-of-type):before, .result-list .extended-search-link:before {
     content: '';
     background-image: linear-gradient(to right, var(--main-color), var(--main-color__highlight));
     height: 2px;
@@ -1435,6 +1435,25 @@ details[open]>summary::after {
 
 .result-list .airecommends .course-list>li:first-of-type:before {
     background-image: none;
+}
+
+.result-list .extended-search-link {
+    position: relative;
+    padding-top: 2em;
+    display: flex;
+    justify-content: center;
+}
+.result-list .extended-search-link a {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--main-color);
+    border-radius: 5px;
+    padding: 0em 1em;
+    text-align: center;
+    color: var(--font-color__light);
+    padding: .5em 1em;
 }
 
 .complevel-filter {

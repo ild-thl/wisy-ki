@@ -2573,6 +2573,13 @@ class CourseListStep extends SearchStep {
     scrollPosition = 0;
 
     /**
+     * Represents the maximum number of search results to display before displaying a "Erweiterte Suche" button. Set to 0 to disable.
+     * @type {number}
+     * @default 10
+     */
+    maxSearchResults = 10;
+
+    /**
      * Create a course list step.
      * @param {Object} scout - The scout object.
      * @param {Object} path - The parent path object.
@@ -2656,9 +2663,6 @@ class CourseListStep extends SearchStep {
         courselistNode.innerHTML = html;
 
         show(courselistNode);
-        courselistCountNode.textContent = this.getKurseCountString(
-            data.results.length
-        );
 
         this.filterMenu.updateCourseCount(completedata.count);
 
@@ -2725,7 +2729,7 @@ class CourseListStep extends SearchStep {
                 accordions.forEach((accordion) => {
                     if (accordion.open) {
                         this.openAccordionTitle =
-                            accordion.querySelector("summary").textContent;
+                            accordion.querySelector("summary .result-list__label").textContent;
                     }
                 });
                 this.scrollPosition = this.node.parentNode.scrollTop;
@@ -2798,13 +2802,18 @@ class CourseListStep extends SearchStep {
             }
 
             let countstring = 0;
+            let count = 0;
             if (currentSkill) {
-                countstring = this.getKurseCountString(
-                    currentSkill.levels[0].count
-                );
+                count = currentSkill.levels[0].count;
             } else {
-                countstring = this.getKurseCountString(
-                    currentLevelResults.length
+                count = currentLevelResults.length;
+            }
+            countstring = this.getKurseCountString(count)
+            
+            if (this.maxSearchResults > 0) {
+                currentLevelResults = currentLevelResults.slice(
+                    0,
+                    this.maxSearchResults
                 );
             }
 
@@ -2816,6 +2825,9 @@ class CourseListStep extends SearchStep {
             };
             if (currentSkill) {
                 filteredSet.skill = currentSkill;
+            }
+            if (this.maxSearchResults > 0 && count > this.maxSearchResults) {
+                filteredSet.extendedsearchuri = "/search?qs=" + set.label;
             }
             data.sets.push(filteredSet);
             // Add the id of everycourse in filteredResults to uniquercourses set.
@@ -2868,15 +2880,13 @@ class CourseListStep extends SearchStep {
                 // Find the openAccordion by title attribute.
                 accordions.forEach((accordion) => {
                     if (
-                        accordion.querySelector("summary").textContent ==
+                        accordion.querySelector("summary .result-list__label").textContent ==
                         this.openAccordionTitle
                     ) {
                         accordion.open = true;
                         setTimeout(() => {
-                            console.log(this.scrollPosition);
                             this.node.parentNode.scrollTop =
                                 this.scrollPosition;
-                            console.log(this.node.parentNode.scrollTop);
                         }, 300);
                     }
                 });
