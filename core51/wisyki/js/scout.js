@@ -26,8 +26,13 @@ class Account {
      */
     constructor() {
         this.isLoggedIn = this.checkLogin();
-        const scoutid = false; // TODO: Get id from url to load a older saved version of the scout progress.
-        this.load(scoutid);
+
+        // Get scoutid and step attribute from url.
+        const urlParams = new URLSearchParams(window.location.search);
+        const scoutid = urlParams.get("scoutid");
+        const step = urlParams.get("step");
+
+        this.load(scoutid, step);
     }
 
     /**
@@ -58,8 +63,9 @@ class Account {
     /**
      * Load the user account from local storage or from server if logged in.
      * @param {boolean} [id=false] - The id of the user account.
+     * @param {number} [step=null] - The step of the user account.
      */
-    load(id = false) {
+    load(id = false, step = null) {
         let storedAccountJSON;
 
         if (this.isLoggedIn && id) {
@@ -81,7 +87,7 @@ class Account {
             this.skills = storedAccount.skills || {};
             this.name = storedAccount.name;
             this.lastvisited = storedAccount.lastvisited;
-            this.step = storedAccount.step;
+            this.step = step || storedAccount.step;
             this.path = storedAccount.path;
             this.filters = storedAccount.filters || {};
         } catch (err) {
@@ -287,7 +293,18 @@ class Account {
      * @param {number} step - The step to set.
      */
     setStep(step) {
-        this.step = step;
+        if (this.step != step) {
+            this.step = step;
+
+            // Update url.
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set("step", step);
+            const newUrl =
+                window.location.pathname + "?" + urlParams.toString();
+
+            // Push to browser history.
+            window.history.pushState({ newUrl }, "", newUrl);
+        }
         this.store();
     }
 
@@ -1163,7 +1180,9 @@ class Step {
      * @returns {boolean} - True if the step has been rendered, false otherwise.
      */
     isRendered() {
-        return document.querySelector(`#${this.name} .step`).children.length !== 0;
+        return (
+            document.querySelector(`#${this.name} .step`).children.length !== 0
+        );
     }
 
     /**
@@ -1531,8 +1550,6 @@ class OccupationSkillsStep extends Step {
                 // Get all the skills
                 const skillsList = this.skillsNode.querySelectorAll("li");
 
-                console.log(skillsList);
-
                 // Hide the skills beyond the initial visible count
                 for (
                     let i = this.visibleSkillsCount;
@@ -1547,17 +1564,12 @@ class OccupationSkillsStep extends Step {
 
                 // Add event listener to the show more button
                 showMoreButton.addEventListener("click", () => {
-                    console.log("show more");
-                    console.log(this.visibleSkillsCount);
-                    console.log(skillsList.length);
-
                     // Show all the skills
                     for (
                         let i = this.visibleSkillsCount;
                         i < skillsList.length;
                         i++
                     ) {
-                        console.log(skillsList[i]);
                         skillsList[i].style.display = "flex";
                     }
 
@@ -2484,7 +2496,9 @@ class SearchStep extends Step {
                                 levelid
                             ];
                         if (
-                            Object.keys(this.scout.complevelmapping).includes(level)
+                            Object.keys(this.scout.complevelmapping).includes(
+                                level
+                            )
                         ) {
                             results.sets[setid].results[resultid].levels[
                                 levelid
@@ -2543,6 +2557,20 @@ class CourseListStep extends SearchStep {
      * @type {string}
      */
     resultsetsTemplatename;
+
+    /**
+     * Represents the title of the currently opened accordion.
+     * @type {string}
+     * @default null
+     */
+    openAccordionTitle = null;
+
+    /**
+     * Represents the scroll position of the result list.
+     * @type {number}
+     * @default 0
+     */
+    scrollPosition = 0;
 
     /**
      * Create a course list step.
@@ -2690,6 +2718,17 @@ class CourseListStep extends SearchStep {
             btn.addEventListener("click", (event) => {
                 this.scout.selectedCourse = courseid;
                 this.scout.update("next");
+
+                // Save the current state of this step.
+                // Currently opened accordion and scroll position.
+                const accordions = this.resultList.querySelectorAll("details");
+                accordions.forEach((accordion) => {
+                    if (accordion.open) {
+                        this.openAccordionTitle =
+                            accordion.querySelector("summary").textContent;
+                    }
+                });
+                this.scrollPosition = this.node.parentNode.scrollTop;
             });
         });
     }
@@ -2707,7 +2746,10 @@ class CourseListStep extends SearchStep {
         };
 
         for (const set of this.scout.searchResults.sets) {
-            if (this.scout.selectedResultset && set.label != this.scout.selectedResultset) {
+            if (
+                this.scout.selectedResultset &&
+                set.label != this.scout.selectedResultset
+            ) {
                 continue;
             }
             let currentLevelResults = [];
@@ -2730,9 +2772,13 @@ class CourseListStep extends SearchStep {
                     }
                 }
 
-                let levels = [""].concat(Object.values(this.scout.complevelmapping));
+                let levels = [""].concat(
+                    Object.values(this.scout.complevelmapping)
+                );
                 if (currentSkill.isLanguageSkill) {
-                    levels = [""].concat(Object.values(this.scout.langlevelmapping));
+                    levels = [""].concat(
+                        Object.values(this.scout.langlevelmapping)
+                    );
                 }
                 const filteredResults = this.getFilteredCourselist(
                     set.results,
@@ -2751,12 +2797,21 @@ class CourseListStep extends SearchStep {
                 currentLevelResults = filteredResults[currentSkill.levelGoal];
             }
 
+            let countstring = 0;
+            if (currentSkill) {
+                countstring = this.getKurseCountString(
+                    currentSkill.levels[0].count
+                );
+            } else {
+                countstring = this.getKurseCountString(
+                    currentLevelResults.length
+                );
+            }
+
             const filteredSet = {
                 label: label,
                 skilllabel: set.label,
-                countstring: this.getKurseCountString(
-                    currentLevelResults.length
-                ),
+                countstring: countstring,
                 results: currentLevelResults,
             };
             if (currentSkill) {
@@ -2809,7 +2864,25 @@ class CourseListStep extends SearchStep {
         // Get all the <details> elements
         const accordions = this.resultList.querySelectorAll("details");
         if (accordions.length) {
-            accordions[0].open = true;
+            if (this.openAccordionTitle) {
+                // Find the openAccordion by title attribute.
+                accordions.forEach((accordion) => {
+                    if (
+                        accordion.querySelector("summary").textContent ==
+                        this.openAccordionTitle
+                    ) {
+                        accordion.open = true;
+                        setTimeout(() => {
+                            console.log(this.scrollPosition);
+                            this.node.parentNode.scrollTop =
+                                this.scrollPosition;
+                            console.log(this.node.parentNode.scrollTop);
+                        }, 300);
+                    }
+                });
+            } else {
+                accordions[0].open = true;
+            }
 
             // Add event listeners to handle accordion interactions
             accordions.forEach((accordion) => {
@@ -4147,7 +4220,9 @@ class Lang {
         if (templatename in Lang.cachedTemplates) {
             return Lang.cachedTemplates[templatename];
         }
-        const response = await fetch(`${Lang.templatesDir}${templatename}.mustache`);
+        const response = await fetch(
+            `${Lang.templatesDir}${templatename}.mustache`
+        );
         const template = await response.text();
         Lang.cachedTemplates[templatename] = template;
         return template;
@@ -4161,17 +4236,25 @@ class Lang {
      * @param {Object|null} config - The configuration object.
      * @returns {Promise<string>} The rendered template.
      */
-    static async render(templatename, view = {}, partials = null, config = null) {
+    static async render(
+        templatename,
+        view = {},
+        partials = null,
+        config = null
+    ) {
         // Get template files.
         const template = await Lang.getTemplate(templatename);
-        const partialTemplates = {}
+        const partialTemplates = {};
         if (partials) {
             for (const [partial, file] of Object.entries(partials)) {
                 try {
                     const partialTemplate = await Lang.getTemplate(file);
                     partialTemplates[partial] = partialTemplate;
                 } catch (error) {
-                    console.error(`Error fetching template for '${partial}':`, error);
+                    console.error(
+                        `Error fetching template for '${partial}':`,
+                        error
+                    );
                 }
             }
         }
