@@ -520,8 +520,7 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 					INNER JOIN x_tags s ON ks.tag_id = s.tag_id
 					LEFT JOIN themen t ON k.thema = t.id
 					WHERE k.id = {$course['id']}
-					AND s.tag_eigenschaften IN (-1, 0, 524288, 1048576)
-					AND s.tag_type = 0
+					AND s.tag_type IN (-1, 524288, 1048576)
 					GROUP BY k.id, t.thema;");
 		if (!$this->db->next_record()) {
 			$tags = array();

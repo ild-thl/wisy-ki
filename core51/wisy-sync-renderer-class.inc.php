@@ -317,7 +317,7 @@ class ATTR2TAG_CLASS
 			if( $this->table == 'stichwoerter' )
 			{
 			    
-			    $curr_tag_type = intval($this->db->f('eigenschaften')) & (1+2+4+8+16+1024+32768+65536) /*flags, s.o.*/;
+			    $curr_tag_type = intval($this->db->f('eigenschaften')) & (1+2+4+8+16+1024+32768+65536+524288+1048576) /*flags, s.o.*/;
 			    $curr_tag_help = intval($this->db->f('glossar'));
 			    $curr_tag_descr = $this->db->fs('zusatzinfo');
 			}
