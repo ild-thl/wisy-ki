@@ -16,12 +16,6 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "/admin/config/config.inc.php");
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class WISY_KI_PYTHON_CLASS {
-    /**
-     * Filelocation where all python scripts reside.
-     *
-     * @var string
-     */
-    private string $pythonlib;
 
     /**
      * URI of the WISY_KI-API.
@@ -34,87 +28,11 @@ class WISY_KI_PYTHON_CLASS {
      * Constructor of WISY_KI_PYTHON_CLASS.
      */
     function __construct() {
-        $this->pythonlib = dirname(__FILE__) . '/wisyki/python/';
         if (!defined('WISYKI_API')) {
             throw new Exception('WISYKI_API not set in admin/config/config.inc.php');
         }
         $this->api_endpoint = WISYKI_API;
     }
-
-    /**
-     * Executes the specified python module.
-     *
-     * @param  string $modulename   The name of the Python module to execute.
-     * @param  array  $params       The parameters to pass to the Python module.
-     * @param  string $errorlangstr The error message to display if the command fails.
-     * @return array                Returns an array containing the result body and exit code.
-     * @throws Exception            Throws an Exception if the command fails.
-     */
-    public function exec_command(string $modulename, array $params, string $errorlangstr) {
-        // Executes the specified Python module and returns the result.
-        $cmd = PYTHON_HOME . ' ' . $this->pythonlib . $modulename . ' ';
-        if (count($params) >= 1) {
-            foreach ($params as $param) {
-                $cmd .= escapeshellarg($param) . ' ';
-            }
-        }
-
-        $output = null;
-        $exitcode = null;
-        $result = exec($cmd, $output, $exitcode);
-
-        if (!$result) {
-            throw new Exception($errorlangstr . "\nPython output start: " . implode(", ", $output) . " - python output end\n", $exitcode);
-        }
-
-        return [$result, $exitcode];
-    }
-
-    /**
-     * Extracts keywords from a given text.
-     *
-     * @param  string $text The text to extract keywords from.
-     * @return mixed        Returns an array of keywords or NULL on failure.
-     */
-    public function extract_keywords(string $title = null, string $text) {
-        // Remove wisy headings like '''Inhalte:'''.
-        $text = preg_replace("/'{3}.+?'{3}/", "", $text);
-        // Extracts keywords from a given text using a remote API.
-        $endpoint = "/extractKeywords";
-        $data = [
-            'text' => $text
-        ];
-
-        if (isset($title)) {
-            $data['title'] = $title;
-        }
-
-        $post_data = json_encode($data);
-
-        $url = $this->api_endpoint . $endpoint;
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $post_data);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 80);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLINFO_HEADER_OUT, true);
-        curl_setopt($curl, CURLOPT_POST, true);
-
-        // Set HTTP Header for POST request  
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-
-        $response = curl_exec($curl);
-
-        if (curl_error($curl)) {
-            throw new Exception('Request Error:' . curl_error($curl));
-        }
-
-        curl_close($curl);
-
-        // Decode response and filter results for title and uri attributes. 
-        $response = json_decode($response, true);
-        return $response;
-    }
-
 
     /**
      * Predicts the comprehension level of a given course.
@@ -211,7 +129,28 @@ class WISY_KI_PYTHON_CLASS {
 
         // Decode response and filter results for title and uri attributes.
         $response = json_decode($response, true);
+
+        // TODO Filter out esco skills that are blacklisted.
+        $response["results"] = $this->filter_blacklisted_esco_skills($response["results"]);
+
         return $response;
+    }
+
+    public function filter_blacklisted_esco_skills($esco_skills) {
+        // table `kompetenz_blacklist` contains a list of esco skills that should not be suggested identified by uri.
+        $blacklisted_skills = [];
+        
+        $db = new DB_Admin();
+        $db->query("SELECT title FROM kompetenz_blacklist");
+        while ($db->next_record()) {
+            $blacklisted_skills[] = $db->f8('title');
+        }
+
+        $filtered_esco_skills = array_filter($esco_skills, function ($esco_skill) use ($blacklisted_skills) {
+            return !in_array($esco_skill['title'], $blacklisted_skills);
+        });
+
+        return $filtered_esco_skills;
     }
 
 
@@ -256,32 +195,8 @@ class WISY_KI_PYTHON_CLASS {
      * @return array Sorted documents.
      */
     public function score_semantically(string $base, array $courses, bool $sort = true) {
-        $endpoint = "/getEmbeddings";
-
-        $data = array(
-            "docs" => array($base),
-        );
-
-        $url = $this->api_endpoint . $endpoint;
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLINFO_HEADER_OUT, true);
-        curl_setopt($curl, CURLOPT_POST, true);
-
-        // Set HTTP Header for POST request 
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-
-        $response = curl_exec($curl);
-
-        if (curl_error($curl)) {
-            throw new Exception('Request Error:' . curl_error($curl));
-        }
-
-        curl_close($curl);
-
         // Decode response and filter results for title and uri attributes.
-        $base_embeddings = json_decode($response, true);
+        $base_embeddings = $this->getEmbeddings(array('Represent the learning goals for retrieving relevant courses: ' . $base));
         $base_embedding = $base_embeddings[0];
 
         $doc_embeddings = array_map(function ($course) {

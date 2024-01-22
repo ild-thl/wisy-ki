@@ -903,7 +903,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 
 		$this->log("Calculating embedding for course {$tag['tag_id']}, " . $tag['tag_name']);
 		try {
-			$embeddings = $this->pythonAPI->getEmbeddings(array($doc));
+			$embeddings = $this->pythonAPI->getEmbeddings(array('Represent the skill: ' . $doc));
 		} catch (Exception $e) {
 			$this->log($e->getMessage());
 			return false;
@@ -929,7 +929,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 
 		$this->log("Calculating embedding for course {$course['id']}, " . $course['title']);
 		try {
-			$embeddings = $this->pythonAPI->getEmbeddings(array($doc));
+			$embeddings = $this->pythonAPI->getEmbeddings(array('Represent the course: ' . $doc));
 		} catch (Exception $e) {
 			$this->log($e->getMessage());
 			return false;

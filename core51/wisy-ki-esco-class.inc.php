@@ -367,6 +367,8 @@ class WISY_KI_ESCO_CLASS {
             $escoSuggestions = $this->filter_is_relevant($escoSuggestions);
         }
 
+        $escoSuggestions = $this->filter_blacklisted_esco_skills($escoSuggestions);
+
         if (!empty($context)) {
             $escoSuggestions = $this->sortConceptSkillsByRelevancy($context, $escoSuggestions);
         }
@@ -381,7 +383,7 @@ class WISY_KI_ESCO_CLASS {
     function sortConceptSkillsByRelevancy($context, $escoSuggestions) {
         // Get embedding of the context.
         try {
-            $occupationEmbedding = $this->pythonAPI->getEmbeddings(array($context))[0];
+            $occupationEmbedding = $this->pythonAPI->getEmbeddings(array('Represent the occupation for retrieving relevant skills: ' . $context))[0];
             // catch timeout error and return unsorted array.
         } catch (Exception $e) {
             return $escoSuggestions;
@@ -528,6 +530,23 @@ class WISY_KI_ESCO_CLASS {
         return $filtered;
     }
 
+    public function filter_blacklisted_esco_skills($esco_skills) {
+        // table `kompetenz_blacklist` contains a list of esco skills that should not be suggested identified by uri.
+        $blacklisted_skills = [];
+        
+        $db = new DB_Admin();
+        $db->query("SELECT title FROM kompetenz_blacklist");
+        while ($db->next_record()) {
+            $blacklisted_skills[] = $db->f8('title');
+        }
+
+        $filtered_esco_skills = array_filter($esco_skills, function ($esco_skill) use ($blacklisted_skills) {
+            return !in_array($esco_skill['label'], $blacklisted_skills);
+        });
+
+        return $filtered_esco_skills;
+    }
+
     /**
      * Uses the ESCO API to generate autocomplete results for known ESCO concepts, skills and occupations based on a given term.
      *
@@ -596,6 +615,8 @@ class WISY_KI_ESCO_CLASS {
         if ($onlyrelevant) {
             $results = $this->filter_is_relevant($results);
         }
+
+        $results = $this->filter_blacklisted_esco_skills($results);
 
         // Skip sorting if "sachstichwort_red" in schemes
         if (is_array($schemes) and in_array('sachstichwort_red', $schemes)) {
