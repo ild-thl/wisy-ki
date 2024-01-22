@@ -538,6 +538,8 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 			$thema = $this->db->Record['thema'];
 		}
 
+		$stichwoerter = $this->framework->loadStichwoerter($this->db, 'kurse', $course['id']);
+
 		$end = new DateTime();
 		$dur = $start->diff($end);
 		$this->stichwort_durs[] = $dur;
@@ -575,7 +577,7 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 			'mode' => utf8_encode($this->get_course_mode($course['id'])),
 			'nextDate' => utf8_encode($this->get_next_date($durchfuehrung)),
 			'workload' => utf8_encode($this->get_workload($durchfuehrung)),
-			'price' => utf8_encode($this->get_price($durchfuehrung)),
+			'price' => utf8_encode($this->get_price($durchfuehrung, $stichwoerter)),
 			'location' => utf8_encode($durchfuehrung['ort']),
 			'tags' => $tags,
 			'thema' => utf8_encode($thema),
@@ -592,7 +594,7 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 		);
 	}
 
-	private function get_price(array $durchfuehrung): string {
+	private function get_price(array $durchfuehrung, $stichwoerter = array()): string {
 		return $this->durchfClass->formatPreis(
 			$durchfuehrung['preis'],
 			$durchfuehrung['sonderpreis'],
@@ -602,6 +604,7 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 			true, // format as HTML
 			array(
 				'showDetails' => 1,
+				'stichwoerter' => $stichwoerter,
 			)
 		);
 	}
