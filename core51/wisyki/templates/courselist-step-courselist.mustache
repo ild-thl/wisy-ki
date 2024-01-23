@@ -31,6 +31,16 @@
         <span class="description-label">{{ lang.courseliststep:location }}</span>
         <span class="description-item">{{ location }}</span>
     </div>
+    <div class="course-preview__skills">
+        <ul>
+            {{ #matchedTags }}
+                <li class="skill match">{{ . }}</li>
+            {{ /matchedTags }}
+            {{ #otherTags }}
+                <li class="skill">{{ . }}</li>
+            {{ /otherTags }}
+        </ul>
+    </div>
     <div class="course-preview__actions">
         <button class="bookmark-btn labeled-icon-btn" courseid="{{ id }}">
             <i class="icon star-icon"></i>{{ lang.courseliststep:addtofavourites }}

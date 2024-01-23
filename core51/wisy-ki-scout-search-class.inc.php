@@ -513,31 +513,47 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 
 		$start = new DateTime();
 
-		
-		$this->db->query("SELECT GROUP_CONCAT(s.tag_name ORDER BY s.tag_name) as tags, t.thema
+		# Get Thema.
+		$this->db->query("SELECT t.thema
 					FROM kurse k
 					INNER JOIN x_kurse_tags ks ON k.id = ks.kurs_id
-					INNER JOIN x_tags s ON ks.tag_id = s.tag_id
 					LEFT JOIN themen t ON k.thema = t.id
 					WHERE k.id = {$course['id']}
-					AND s.tag_type IN (-1, 524288, 1048576)
 					GROUP BY k.id, t.thema;");
 		if (!$this->db->next_record()) {
-			$tags = array();
-			$skillMatches = 0;
 			$thema = "";
 		} else {
-			$tags = explode(',', utf8_encode($this->db->Record['tags']));
-			$skillMatches = 0;
-			foreach ($this->skilltags as $skilltag) {
-				if (in_array($skilltag, $tags)) {
-					$skillMatches++;
-				}
-			}
 			$thema = $this->db->Record['thema'];
 		}
 
+		# Get Stichwoerter.
 		$stichwoerter = $this->framework->loadStichwoerter($this->db, 'kurse', $course['id']);
+
+		$tags = array();
+		foreach ($stichwoerter as $stichwort) {
+			if (!in_array($stichwort['eigenschaften'], array(0, 524288))) {
+				continue;
+			}
+			if (preg_match("/Niveau \w/", $stichwort['stichwort'])) {
+				continue;
+			}
+			$tags[] = preg_replace('/ +\(ESCO\)/', '', utf8_encode($stichwort['stichwort']));
+		}
+
+		$skillMatches = 0;
+		$matchedTags = [];
+		$otherTags = [];
+		foreach ($this->skilltags as $skilltag) {
+			if (in_array($skilltag, $tags)) {
+				$skillMatches++;
+				$matchedTags[] = $skilltag;
+			}
+		}
+		foreach ($tags as $tag) {
+			if (!in_array($tag, $matchedTags)) {
+				$otherTags[] = $tag;
+			}
+		}
 
 		$end = new DateTime();
 		$dur = $start->diff($end);
@@ -579,6 +595,8 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 			'price' => utf8_encode($this->get_price($durchfuehrung, $stichwoerter)),
 			'location' => utf8_encode($durchfuehrung['ort']),
 			'tags' => $tags,
+			'matchedTags' => $matchedTags,
+			'otherTags' => $otherTags,
 			'thema' => utf8_encode($thema),
 			'skillMatches' => $skillMatches,
 			'embedding' => $embedding,

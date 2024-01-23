@@ -15,9 +15,9 @@
     --font-color__dark: #444;
     --font-color__soft: #888;
     --font-color__light: #fff;
-    --font-color__highlight: rgb(230, 214, 0);
     --link-color: slateblue;
-    --link-color__highlight: crimson;
+    --link-color__highlight: #4D6E93;
+    --alert-color: #B3261E;
     --hover-color: #ccd3db;
     --doc-height: 100%;
     --steps: 1;
@@ -273,7 +273,7 @@ nav a .bubble {
     position: absolute;
     top: 7px;
     right: 8px;
-    background-color: red;
+    background-color: var(--alert-color);
     color: var(--font-color__light);
     border-radius: 100%;
     height: 1.6em;
@@ -744,6 +744,7 @@ main .steps>div {
     margin: 0 auto;
     margin-bottom: 2em;
     position: relative;
+    margin-top: 5px;
 }
 
 .abort {
@@ -1302,7 +1303,7 @@ p.current-level {
     position: absolute;
     top: -.8em;
     right: -.8em;
-    background-color: red;
+    background-color: var(--alert-color);
     color: var(--font-color__light);
     border-radius: 100%;
     height: 1.6em;
@@ -1405,11 +1406,11 @@ details[open]>summary::after {
     transition: opacity .3s ease-in-out;
 }
 
-.course-list li {
+.course-list>li {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 2em;
+    gap: 1.5em;
     padding: 1.5em .5em;
     position: relative;
 }
@@ -1454,6 +1455,78 @@ details[open]>summary::after {
     text-align: center;
     color: var(--font-color__light);
     padding: .5em 1em;
+}
+
+.course-preview__skills {
+    position: relative;
+    overflow: hidden; /* Hide the overflow */
+}
+
+.course-preview__skills ul {
+    font-size: 0.8em;
+    padding-bottom: 4px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 5px;
+    list-style-type: none;
+    /* horizontal scroll */
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+
+    /* hide scroll bar on mobile */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    /* Style scrollbar */
+    &::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1; /* Color of the track */
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #888; /* Color of the scroll thumb */
+        border-radius: 2px; /* Radius for the scroll thumb */
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: #555; /* Color of the scroll thumb on hover */
+    }
+
+    /* Disable text selection */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    position: relative;
+}
+
+.course-preview__skills::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: .5em;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgb(255, 255, 255));
+    pointer-events: none;
+    z-index: 1;
+}
+
+.skill {
+    border-radius: 3px;
+    background-color: var(--secondary-background-color);
+    color: var(--font-color__dark);
+    padding: .5em 1em;
+}
+
+.match {
+    background-color: var(--main-color);
+    color: var(--font-color__light);
 }
 
 .complevel-filter {
