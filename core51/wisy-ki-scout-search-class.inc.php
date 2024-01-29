@@ -551,12 +551,18 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 		foreach ($this->skilltags as $skilltag) {
 			if (in_array($skilltag, $tags)) {
 				$skillMatches++;
-				$matchedTags[] = $skilltag;
+				$matchedTags[] = array(
+					"url" => "/search?qs=" . urlencode(utf8_decode($skilltag)),
+					"label" => $skilltag
+				);
 			}
 		}
 		foreach ($tags as $tag) {
 			if (!in_array($tag, $matchedTags)) {
-				$otherTags[] = $tag;
+				$otherTags[] = array(
+					"url" => "/search?qs=" . urlencode(utf8_decode($tag)),
+					"label" => $tag
+				);
 			}
 		}
 

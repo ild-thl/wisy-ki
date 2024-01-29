@@ -803,7 +803,7 @@ main .steps>div {
     box-shadow: 0px 0px 8px #0000005c;
     border: none;
     border-radius: 25px;
-    
+
     /* Center the modal */
     position: fixed;
     top: 50%;
@@ -1322,11 +1322,11 @@ ul.result-list {
     margin-bottom: 1em;
 }
 
-details > summary {
+details>summary {
     list-style: none;
 }
 
-details > summary::-webkit-details-marker {
+details>summary::-webkit-details-marker {
     display: none;
 }
 
@@ -1422,7 +1422,8 @@ details[open]>summary::after {
 }
 
 
-.course-list>li:not(:first-of-type):before, .result-list .extended-search-link:before {
+.course-list>li:not(:first-of-type):before,
+.result-list .extended-search-link:before {
     content: '';
     background-image: linear-gradient(to right, var(--main-color), var(--main-color__highlight));
     height: 2px;
@@ -1442,6 +1443,7 @@ details[open]>summary::after {
     display: flex;
     justify-content: center;
 }
+
 .result-list .extended-search-link a {
     display: flex;
     justify-content: center;
@@ -1457,7 +1459,8 @@ details[open]>summary::after {
 
 .course-preview__skills {
     position: relative;
-    overflow: hidden; /* Hide the overflow */
+    overflow: hidden;
+    /* Hide the overflow */
 }
 
 .course-preview__skills ul {
@@ -1506,11 +1509,15 @@ details[open]>summary::after {
     background-color: var(--secondary-background-color);
     color: var(--font-color__dark);
     padding: .5em 1em;
+    border-top: 3px solid transparent;
+}
+
+.skill a {
+    font-weight: normal;
 }
 
 .match {
-    background-color: var(--main-color);
-    color: var(--font-color__light);
+    border-top: 3px solid var(--main-color);
 }
 
 .complevel-filter {
@@ -1872,7 +1879,8 @@ details[open]>summary::after {
     max-width: 880px;
 }
 
-#courseview .wisy_showalloffers, #courseview .wisyr_anbieter_link{
+#courseview .wisy_showalloffers,
+#courseview .wisyr_anbieter_link {
     display: none;
 }
 
@@ -1934,23 +1942,28 @@ details[open]>summary::after {
     }
 
     .course-preview__skills ul {
+
         /* Style scrollbar */
         &::-webkit-scrollbar {
             height: 4px;
             display: unset;
         }
-    
+
         &::-webkit-scrollbar-track {
-            background: #f1f1f1; /* Color of the track */
+            background: #f1f1f1;
+            /* Color of the track */
         }
-    
+
         &::-webkit-scrollbar-thumb {
-            background: #888; /* Color of the scroll thumb */
-            border-radius: 2px; /* Radius for the scroll thumb */
+            background: #888;
+            /* Color of the scroll thumb */
+            border-radius: 2px;
+            /* Radius for the scroll thumb */
         }
-    
+
         &::-webkit-scrollbar-thumb:hover {
-            background: #555; /* Color of the scroll thumb on hover */
+            background: #555;
+            /* Color of the scroll thumb on hover */
         }
     }
 }

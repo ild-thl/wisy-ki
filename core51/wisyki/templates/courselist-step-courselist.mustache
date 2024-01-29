@@ -34,10 +34,10 @@
     <div class="course-preview__skills">
         <ul>
             {{ #matchedTags }}
-                <li class="skill match">{{ . }}</li>
+                <li class="skill match"><a href="{{ url }}" target="_blank">{{ label }}</a></li>
             {{ /matchedTags }}
             {{ #otherTags }}
-                <li class="skill">{{ . }}</li>
+                <li class="skill"><a href="{{ url }}" target="_blank">{{ label }}</a></li>
             {{ /otherTags }}
         </ul>
     </div>
