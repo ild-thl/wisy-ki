@@ -6,6 +6,7 @@
 require_once('functions.inc.php');
 require_once('eql.inc.php');
 
+
 global $portal_id;
 $portal_id = intval($_GET['id']);
 
@@ -19,7 +20,7 @@ $kurzname = $db->fs('kurzname');
 $site->pageStart(array('popfit'=>1));
 
 	$site->skin->submenuStart();
-		echo '<h2>&#9776;</h2> <b>Menü-Cache löschen für Portal "'.$kurzname.'"</b>';
+		echo '<h2>&#9776;</h2> <b>Menï¿½-Cache lï¿½schen fï¿½r Portal "'.$kurzname.'"</b>';
 	$site->skin->submenuBreak();
 		echo "&nbsp;";
 	$site->skin->submenuEnd();
@@ -63,9 +64,9 @@ $site->pageStart(array('popfit'=>1));
 		</style>
 	
 		<form action="<?php echo $_SERVER['PHP_SELF']."?module=".$_GET['module']."&menucache=delete&id=".$portal_id; ?>" method="POST">
-			<p>Den Cache für Men&uuml;s zu l&ouml;schen sorgt daf&uuml;r, dass bisherige &Auml;nderungen an Men&uuml;s in Portaleinstellungen sofort aktuell auf der Website zur Verf&uuml;gung stehen.</p>
+			<p>Den Cache fï¿½r Men&uuml;s zu l&ouml;schen sorgt daf&uuml;r, dass bisherige &Auml;nderungen an Men&uuml;s in Portaleinstellungen sofort aktuell auf der Website zur Verf&uuml;gung stehen.</p>
 			<br>
-			<input type="submit" value="Menü-Cache jetzt löschen">
+			<input type="submit" value="Menï¿½-Cache jetzt lï¿½schen">
 			<br><br><br>
 		</form>
 		
@@ -101,7 +102,7 @@ $site->pageStart(array('popfit'=>1));
 	$site->skin->workspaceEnd();
 	
 	$site->skin->submenuStart();
-		echo '<h2>&#128270;</h2> <b>Such-Cache löschen für Portal "'.$kurzname.'"</b>';
+		echo '<h2>&#128270;</h2> <b>Such-Cache lï¿½schen fï¿½r Portal "'.$kurzname.'"</b>';
 	$site->skin->submenuBreak();
 		echo "&nbsp;";
 	$site->skin->submenuEnd();
@@ -137,7 +138,7 @@ $site->pageStart(array('popfit'=>1));
 	$site->skin->workspaceEnd();
 	
 	$site->skin->buttonsStart();
-		form_button('cancel', 'Fenster schließen.', 'window.close();return false;');
+		form_button('cancel', 'Fenster schlieï¿½en.', 'window.close();return false;');
 	$site->skin->buttonsEnd();
 		
 $site->pageEnd();

@@ -3,6 +3,9 @@
 require_once($_SERVER['DOCUMENT_ROOT'] . "/admin/sql_curr.inc.php");
 require_once($_SERVER['DOCUMENT_ROOT'] . "/admin/config/config.inc.php");
 
+
+
+
 function selectPortalOrFwd301($db)
 {
 

@@ -38,6 +38,8 @@ Functions
 //Decide WISY or WISY@KI
 function select_WisyKi()
 {
+	require_once($_SERVER['DOCUMENT_ROOT'] . "/ki_admin/WisyKi/KiAdminUtil.php");
+
 	$wisyPortalEinstellungen = null;
 	$db = new DB_Admin;
 	$ist_domain = strtolower($_SERVER['HTTP_HOST']);
@@ -48,9 +50,9 @@ function select_WisyKi()
 	$sql = "SELECT * FROM portale WHERE status=1 AND domains LIKE '%" . addslashes(str_replace('www.', '', $ist_domain)) . "%';";
 	$db->query($sql);
 	if ($db->next_record()) {
-		$wisyPortalEinstellungen = explodeSettings($db->fs('einstellungen'));
+		$wisyPortalEinstellungen = KI_ADMIN_UTIL::explodeSettings($db->fs('einstellungen'));
 	} else {
-		error404();
+		KI_ADMIN_UTIL::error404();
 	}
 	if (strval($wisyPortalEinstellungen['wisyki'] != '')) {
 		$GLOBALS['WisyKi'] = true;
@@ -504,6 +506,7 @@ require_once('index_tools.inc.php');
 require_once('index_form.inc.php');
 require_lang('lang/dbsearch');
 require_lang('lang/overview');
+require_once($_SERVER['DOCUMENT_ROOT'] . "/ki_admin/WisyKi/KiAdminUtil.php");
 
 
 $table = isset($_REQUEST['table']) ? $_REQUEST['table'] : null;
