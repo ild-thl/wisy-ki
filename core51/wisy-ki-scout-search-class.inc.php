@@ -138,6 +138,23 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 			}
 		}
 
+		// Duration filter.
+		if (isset($filters->duration) and !empty($filters->duration)) {
+			$querystring .= ', dauer:' . utf8_decode($filters->duration);
+		}
+
+		// Funding filter.
+		if (isset($filters->funding)) {
+			for ($i = 0; $i < count($filters->funding); $i++) {
+				$funding = $filters->funding[$i];
+				if ($i == 0) {
+					$querystring .= ', ' . utf8_decode($funding);
+				} else {
+					$querystring .= ' ODER ' . utf8_decode($funding);
+				}
+			}
+		}
+
 		// Price filter.
 		if (isset($filters->price) and !empty($filters->price)) {
 			$querystring .= ', preis:' . utf8_decode($filters->price);
@@ -151,18 +168,6 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 					$querystring .= ', ' . utf8_decode($timeofday);
 				} else {
 					$querystring .= ' ODER ' . utf8_decode($timeofday);
-				}
-			}
-		}
-
-		// Funding filter.
-		if (isset($filters->funding)) {
-			for ($i = 0; $i < count($filters->funding); $i++) {
-				$funding = $filters->funding[$i];
-				if ($i == 0) {
-					$querystring .= ', ' . utf8_decode($funding);
-				} else {
-					$querystring .= ' ODER ' . utf8_decode($funding);
 				}
 			}
 		}
