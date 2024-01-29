@@ -791,6 +791,17 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 			$wherecourseidsql = "AND k.id = " . intval($_REQUEST['courseid']);
 		}
 
+		$whereoldornoembedding = ""; // Set default.
+		
+		$updateall = isset($_REQUEST['updateAll']) && ($_REQUEST['updateAll'] == true || $_REQUEST['updateAll'] == '');
+		if (!$updateall) {
+			$whereoldornoembedding = "AND (
+				-- Courses without embedding or with old embedding
+				ke.kurs_id IS NULL -- No embedding present
+				OR ke.date_modified < k.date_modified -- Embedding older than kurs
+			)";
+		}
+
 		// build the SQL query to retrieve courses without or and old embedding
 		$sql = "SELECT k.id, k.titel, k.beschreibung, GROUP_CONCAT(s.stichwort) as tags, t.thema
 				FROM kurse k
@@ -800,11 +811,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 				LEFT JOIN kurse_embedding ke ON ke.kurs_id = k.id
 				WHERE k.freigeschaltet IN (1, 4)
 				$wherecourseidsql
-				AND (
-					-- Courses without embedding or with old embedding
-					ke.kurs_id IS NULL -- No embedding present
-					OR ke.date_modified < k.date_modified -- Embedding older than kurs
-				)
+				$whereoldornoembedding
 				AND (
 					-- Courses that have skills associated with them and therefore are relevant for the scout
 					(s.eigenschaften IN (0, 524288, 1048576)) -- Sachstichwort OR ESCO-Kompetenz OR ESCO-Tätigkeit
@@ -812,7 +819,6 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 				)
 				GROUP BY k.id, t.thema
 				$limit";
-
 		// execute the SQL query and retrieve the courses
 		if (!$db->query($sql)) {
 			$this->log("Error executing sql: $sql");
@@ -861,15 +867,27 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 			$wheretagidsql = "AND s.id = " . intval($_REQUEST['tagid']);
 		}
 
-		// build the SQL query to retrieve tags without an embedding
-		$sql = "SELECT t.tag_id, t.tag_name
-				FROM tag t
-				LEFT JOIN tag_embedding te ON te.tag_id = t.tag_id
-				WHERE te.tag_id IS NULL -- Embedding does not yet exist
-				AND s.eigenschaften IN (524288, 1048576) -- ESCO-Kompetenz or ESCO-Tätigkeit
-				$wheretagidsql
-				GROUP BY s.id
-				$limit";
+		$updateall = isset($_REQUEST['updateAll']) && ($_REQUEST['updateAll'] == true || $_REQUEST['updateAll'] == '');
+
+		if ($updateall) {
+			// build the SQL query to retrieve all tags
+			$sql = "SELECT s.id, s.stichwort
+					FROM stichwoerter s
+					WHERE s.eigenschaften IN (524288, 1048576) -- ESCO-Kompetenz or ESCO-Tätigkeit
+					$wheretagidsql
+					GROUP BY s.id
+					$limit";
+		} else {
+			// build the SQL query to retrieve tags without an embedding
+			$sql = "SELECT s.id, s.stichwort
+					FROM stichwoerter s
+					LEFT JOIN scout_stichwoerter ss ON ss.stichwort_id = s.id
+					WHERE ss.stichwort_id IS NULL -- Embedding does not yet exist
+					AND s.eigenschaften IN (524288, 1048576) -- ESCO-Kompetenz or ESCO-Tätigkeit
+					$wheretagidsql
+					GROUP BY s.id
+					$limit";
+		}
 
 		// execute the SQL query and retrieve the courses
 		if (!$db->query($sql)) {
@@ -896,14 +914,14 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 	}
 
 	function createTagEmbedding($tag) {
-		$doc = utf8_encode($tag['tag_name']);
+		$doc = utf8_encode($tag['stichwort']);
 
 		// Remove "(ESCO)" from stichwort.
 		$doc = str_replace(" (ESCO)", "", $doc);
 
-		$this->log("Calculating embedding for course {$tag['tag_id']}, " . $tag['tag_name']);
+		$this->log("Calculating embedding for course {$tag['id']}, " . $tag['stichwort']);
 		try {
-			$embeddings = $this->pythonAPI->getEmbeddings(array('Represent the skill: ' . $doc));
+			$embeddings = $this->pythonAPI->getEmbeddings(array($doc), 'Represent the skill for retrieval: ');
 		} catch (Exception $e) {
 			$this->log($e->getMessage());
 			return false;
@@ -915,7 +933,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 		$embedding = json_encode($embeddings[0]);
 
 		$db2 = new DB_Admin();
-		$sql = "REPLACE INTO tag_embedding (tag_id, embedding, date_modified) VALUES ({$tag['tag_id']}, '$embedding', NOW())";
+		$sql = "REPLACE INTO scout_stichwoerter (stichwort_id, embedding, date_modified) VALUES ({$tag['id']}, '$embedding', NOW())";
 
 		if ($db2->query($sql)) {
 			return true;
@@ -929,7 +947,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 
 		$this->log("Calculating embedding for course {$course['id']}, " . $course['title']);
 		try {
-			$embeddings = $this->pythonAPI->getEmbeddings(array('Represent the course: ' . $doc));
+			$embeddings = $this->pythonAPI->getEmbeddings(array($doc), 'Represent the course for retrieval: ');
 		} catch (Exception $e) {
 			$this->log($e->getMessage());
 			return false;
@@ -1293,19 +1311,16 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 		}
 
 		// see what to do ...
-		if( isset($_GET['kurseFast']) )
-		{
+		if (isset($_GET['kurseFast'])) {
 			$this->log("********** $host: starting kurseFast - if you do not read \"done.\" below, we're aborted unexpectedly and things may not work!");
 			$this->doSyncKurse(false);
-		}
-		else if( isset($_GET['kurseSlow']) )
-		{
+		} else if (isset($_GET['kurseSlow'])) {
 			$this->log("********** $host: calling alle_freischaltungen_ueberpruefen()");
 			alle_freischaltungen_ueberpruefen();
-			
+
 			$this->log("********** $host: starting kurseSlow - if you do not read \"done.\" below, we're aborted unexpectedly and things may not work!");
 			$this->doSyncKurse(true);
-		}else if (isset($_GET['syncESCO'])) {
+		} else if (isset($_GET['syncESCO'])) {
 			$this->log("********** $host: starting Syncronisateion with ESCO - if you do not read \"done.\" below, we're aborted unexpectedly and things may not work!");
 			$this->doSyncESCO(false);
 		} else if (isset($_GET['classifyLearningOutcome'])) {

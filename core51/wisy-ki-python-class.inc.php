@@ -196,8 +196,11 @@ class WISY_KI_PYTHON_CLASS {
      */
     public function score_semantically(string $base, array $courses, bool $sort = true) {
         // Decode response and filter results for title and uri attributes.
-        $base_embeddings = $this->getEmbeddings(array('Represent the learning goals for retrieving relevant courses: ' . $base));
+        $base_embeddings = $this->getEmbeddings(array($base), 'Represent the learning goals for retrieving relevant courses: ');
         $base_embedding = $base_embeddings[0];
+        if (!$base_embedding) {
+            return $courses;
+        }
 
         $doc_embeddings = array_map(function ($course) {
             return json_decode($course['embedding']);
@@ -264,38 +267,58 @@ class WISY_KI_PYTHON_CLASS {
     }
 
     /**
-     * Sort courses in referance to a base string based on semantic similarity.
+     * Returns the embeddings for a given array of documents.
      *
-     * @param  array $courses
-     * @return array Sorted documents.
+     * @param  array $documents An array of documents.
+     * @param  string $instruction The instruction for the embedding model.
+     * @return array An array of embeddings.
      */
-    public function getEmbeddings(array $documents) {
-        $endpoint = "/getEmbeddings";
+    public function getEmbeddings(array $documents, string $instruction) {
+        $endpoint = "/embeddings/documents";
 
         $data = array(
             "docs" => $documents,
+            "embed_instruction" => $instruction,
+            "model" => "instructor-large",
         );
-
+        
         $url = $this->api_endpoint . $endpoint;
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLINFO_HEADER_OUT, true);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_TIMEOUT, max(10, count($documents) / 2));
-
-        // Set HTTP Header for POST request 
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-
-        $response = curl_exec($curl);
-
-        if (curl_error($curl)) {
-            throw new Exception('Request Error:' . curl_error($curl));
+        
+        $maxAttempts = 3; // Maximum number of attempts
+        $attempts = 0; // Counter for attempts
+        
+        do {
+            $attempts++;
+            $curl = curl_init($url);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLINFO_HEADER_OUT, true);
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_TIMEOUT, max(6, count($documents) / 2) * $attempts);
+        
+            // Set HTTP Header for POST request 
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+        
+            $response = curl_exec($curl);
+        
+            if (curl_errno($curl) == CURLE_OPERATION_TIMEDOUT) {
+                // If a timeout occurs, sleep for a second and then try again
+                sleep(1);
+                continue;
+            } else if (curl_error($curl)) {
+                throw new Exception('Request Error:' . curl_error($curl));
+            }
+        
+            curl_close($curl);
+            break; // If the request was successful, break the loop
+        
+        } while ($attempts < $maxAttempts);
+        
+        if ($attempts == $maxAttempts) {
+            throw new Exception('Request Timeout: Maximum number of attempts reached');
         }
-
-        curl_close($curl);
-
-        return json_decode($response, true);
+        
+        return json_decode($response, true);        
     }
 
     /**

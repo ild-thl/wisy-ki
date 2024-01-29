@@ -383,7 +383,7 @@ class WISY_KI_ESCO_CLASS {
     function sortConceptSkillsByRelevancy($context, $escoSuggestions) {
         // Get embedding of the context.
         try {
-            $occupationEmbedding = $this->pythonAPI->getEmbeddings(array('Represent the occupation for retrieving relevant skills: ' . $context))[0];
+            $occupationEmbedding = $this->pythonAPI->getEmbeddings(array($context), 'Represent the occupation for retrieving relevant skills: ')[0];
             // catch timeout error and return unsorted array.
         } catch (Exception $e) {
             return $escoSuggestions;
