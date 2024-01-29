@@ -678,16 +678,14 @@ class Path {
 
         // Define UI-action for ging to a specific step.
         this.scoutNavNode = this.node.querySelector(".scout-nav");
-        this.scoutNavSteps = this.node.querySelectorAll(
-            ".scout-nav__progress ul li"
-        );
-        const scoutNavBtns = this.node.querySelectorAll(
-            ".scout-nav__progress ul li button"
-        );
-        scoutNavBtns.forEach((btn) => {
-            btn.addEventListener("click", () =>
-                this.update(btn.getAttribute("to-step"))
-            );
+        this.scoutNavSteps = this.node.querySelectorAll(".scout-nav__progress ul li");
+        this.scoutNavSteps.forEach((li) => {
+            li.addEventListener("click", () => {
+                const btn = li.querySelector('button');
+                if (btn) {
+                    this.update(btn.getAttribute("to-step"));
+                }
+            });
         });
 
         // Scroll the current step back into view, when user resizes the window.
@@ -854,6 +852,7 @@ class Path {
             if (showInNav) {
                 stepData.nav_label = ++j;
                 stepData.showInNav = showInNav;
+                stepData.tooltip = Lang.getString(this.steps[i].name + "step:tooltip");
             }
 
             data.steps.push(stepData);
@@ -1133,11 +1132,38 @@ class Step {
     }
 
     /**
+     * Gets the previous step in the path.
+     * 
+     * @returns {Step|null} - The previous step object or null if it is the first step.
+     */
+    prevStep() {
+        if (this.isFirst()) {
+            return null;
+        }
+        return this.path.steps[
+            this.path.steps.indexOf(this.path.currentStep) - 1
+        ];
+    }
+
+    /**
      * Updates the navigation buttons based on the current step.
      */
     updateNavButtons() {
+        const nextStep = this.nextStep();
+        const prevStep = this.prevStep();
         this.scout.prevButton.innerHTML = this.getPrevButtonContent();
         this.scout.nextButton.innerHTML = this.getNextButtonContent();
+        // Set button tile to tooltip langsting of next step.
+        if (nextStep) {
+            this.scout.nextButton.setAttribute(
+                "title", Lang.getString(nextStep.name + "step:tooltip")
+            );
+        }
+        if (prevStep) {
+            this.scout.prevButton.setAttribute(
+                "title", Lang.getString(prevStep.name + "step:tooltip")
+            );
+        }
 
         if (this.isFirst()) {
             hide(this.scout.prevButton, "visibility");
@@ -1158,7 +1184,6 @@ class Step {
             disable(this.scout.nextButton);
         } else {
             show(this.scout.nextButton);
-            const nextStep = this.nextStep();
             if (nextStep && nextStep.checkPrerequisites()) {
                 enable(this.scout.nextButton);
             } else {

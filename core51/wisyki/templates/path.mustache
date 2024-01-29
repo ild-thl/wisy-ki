@@ -12,7 +12,7 @@
             <ul>
                 {{ #steps }}
                 {{ #showInNav }} 
-                <li><button to-step="{{ index }}">{{ nav_label }}</button></li>
+                <li title="{{ tooltip }}"><button to-step="{{ index }}">{{ nav_label }}</button></li>
                 {{ /showInNav }} 
                 {{ /steps }}
             </ul>

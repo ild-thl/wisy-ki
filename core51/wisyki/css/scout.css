@@ -551,6 +551,8 @@ header p {
     border-radius: 100%;
     z-index: 100;
     transition: all .5s ease-out;
+    cursor: pointer;
+    user-select: none;
 }
 
 .scout-nav__progress li::before {
@@ -570,10 +572,6 @@ header p {
 
 .scout-nav__progress li:hover::before {
     border: 1px solid var(--main-color);
-}
-
-.scout-nav__progress li.done.current-step button {
-    cursor: unset;
 }
 
 .scout-nav__progress li.done {
@@ -1479,22 +1477,8 @@ details[open]>summary::after {
     -ms-overflow-style: none;
     scrollbar-width: none;
 
-    /* Style scrollbar */
     &::-webkit-scrollbar {
-        height: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background: #f1f1f1; /* Color of the track */
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: #888; /* Color of the scroll thumb */
-        border-radius: 2px; /* Radius for the scroll thumb */
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-        background: #555; /* Color of the scroll thumb on hover */
+        display: none;
     }
 
     /* Disable text selection */
@@ -1947,6 +1931,27 @@ details[open]>summary::after {
 
     .complevel-filter label {
         font-size: 1em;
+    }
+
+    .course-preview__skills ul {
+        /* Style scrollbar */
+        &::-webkit-scrollbar {
+            height: 4px;
+            display: unset;
+        }
+    
+        &::-webkit-scrollbar-track {
+            background: #f1f1f1; /* Color of the track */
+        }
+    
+        &::-webkit-scrollbar-thumb {
+            background: #888; /* Color of the scroll thumb */
+            border-radius: 2px; /* Radius for the scroll thumb */
+        }
+    
+        &::-webkit-scrollbar-thumb:hover {
+            background: #555; /* Color of the scroll thumb on hover */
+        }
     }
 }
 

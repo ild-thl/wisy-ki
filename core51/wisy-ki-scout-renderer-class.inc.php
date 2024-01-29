@@ -118,8 +118,8 @@ class WISY_KI_SCOUT_RENDERER_CLASS {
 		?>
 
 			<footer class="bottom-nav button-list">
-				<button id="prev-step" class="hidden disabled btn-primary labeled-icon-btn" title="Go to previous step"><i class="icon backward-arrow-icon"></i></button>
-				<button id="next-step" class="hidden disabled btn-primary labeled-icon-btn" title="Go to next step"><i class="icon forward-arrow-icon"></i></button>
+				<button id="prev-step" class="hidden disabled btn-primary labeled-icon-btn" title="Vorheriger Schritt"><i class="icon backward-arrow-icon"></i></button>
+				<button id="next-step" class="hidden disabled btn-primary labeled-icon-btn" title="Nächster Schritt"><i class="icon forward-arrow-icon"></i></button>
 			</footer>
 		</body>
 
