@@ -880,9 +880,8 @@ main .steps>div {
 
 #pathchoice .step {
     height: 90%;
-    display: grid;
-    grid-template-rows: min-content;
-    align-items: start;
+    display: flex;
+    flex-direction: column;
 }
 
 #pathchoice .button-list {
@@ -890,13 +889,13 @@ main .steps>div {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    flex-grow: 1;
     gap: 1em;
     margin: 1em;
 }
 
 #pathchoice .button-list button {
     width: 100%;
-    max-width: 290px;
     padding: 1em;
 }
 
@@ -1454,7 +1453,7 @@ details[open]>summary::after {
     padding: 0em 1em;
     text-align: center;
     color: var(--font-color__light);
-    padding: .5em 1em;
+    padding: 1em 1em;
 }
 
 .course-preview__skills {
@@ -1640,8 +1639,8 @@ details[open]>summary::after {
     bottom: 0;
     right: 0;
     width: 100%;
-    max-width: 420px;
-    height: 560px;
+    max-width: 430px;
+    height: 620px;
     max-height: 90vh;
     background: var(--main-background-color);
     border-radius: 10px 10px 0 0;
@@ -1692,15 +1691,21 @@ details[open]>summary::after {
 }
 
 .filter-nav {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    justify-items: center;
     border: none;
-    align-items: center;
     gap: .5em;
 }
 
+@media (max-height: 650px) {
+    .filter-nav {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 .filter-nav label {
-    width: 200px;
+    width: 100%;
+    max-width: 200px;
     text-align: center;
     height: min-content;
     padding: .2em;
@@ -2008,12 +2013,13 @@ main .steps {
 SCOUT-FOOTER LOGO INTRO STEP1
  */
 .footer-scout-logo {
-    margin-bottom: 1em;
-    align-self: end;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    align-content: center;
+    flex-grow: 2;
+    align-content: flex-end;
+    align-self: center;
+    margin-bottom: 1em;
 }
 
 .footer-scout-logo img {

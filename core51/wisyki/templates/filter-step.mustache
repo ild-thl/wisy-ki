@@ -1,0 +1,8 @@
+<h2>{{ heading }}</h2>
+<p>{{ subheading }}</p>
+<dialog class="help-modal modal">
+    <article>{{{ help }}}</article>
+    <button type="button" class="close-help-modal-btn btn-link" title="{{ lang.help:understood }}">{{ lang.help:understood }}</button>
+</dialog>
+<button type="button" class="open-help-modal-btn btn-link" title="{{ lang.help }}"><i class="icon help-icon"></i>{{ helpintro }}</button>
+{{ >filter }}

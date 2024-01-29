@@ -616,6 +616,11 @@ class Path {
     blockingProcesses = [];
 
     /**
+     * Function to preload the search results.
+     */
+    preloadSearch;
+
+    /**
      * The constructor for the Path class.
      * @param {Scout} scout - The scout object.
      * @throws {Error} Throws an error if trying to instantiate the abstract Path class.
@@ -649,6 +654,15 @@ class Path {
     init() {
         // Init steps.
         this.steps.forEach((step) => step.init());
+
+        // Find the first step of type SearchStep and assign its preloadSearch function to this.preloadSearch.
+        for (const step of this.steps) {
+            if (step.preloadSearch) {
+                this.preloadSearch = step.preloadSearch.bind(step);
+                break;
+            }
+        }
+
         // Init main .steps.
         this.stepsNode = this.node.querySelector(".steps > div");
 
@@ -678,10 +692,12 @@ class Path {
 
         // Define UI-action for ging to a specific step.
         this.scoutNavNode = this.node.querySelector(".scout-nav");
-        this.scoutNavSteps = this.node.querySelectorAll(".scout-nav__progress ul li");
+        this.scoutNavSteps = this.node.querySelectorAll(
+            ".scout-nav__progress ul li"
+        );
         this.scoutNavSteps.forEach((li) => {
             li.addEventListener("click", () => {
-                const btn = li.querySelector('button');
+                const btn = li.querySelector("button");
                 if (btn) {
                     this.update(btn.getAttribute("to-step"));
                 }
@@ -852,7 +868,9 @@ class Path {
             if (showInNav) {
                 stepData.nav_label = ++j;
                 stepData.showInNav = showInNav;
-                stepData.tooltip = Lang.getString(this.steps[i].name + "step:tooltip");
+                stepData.tooltip = Lang.getString(
+                    this.steps[i].name + "step:tooltip"
+                );
             }
 
             data.steps.push(stepData);
@@ -886,6 +904,7 @@ class OccupationPath extends Path {
             new SkillsStep(this.scout, this),
             new LevelCurrentStep(this.scout, this),
             new LevelGoalStep(this.scout, this),
+            new FilterStep(this.scout, this, DegreeFilter),
             new CourseListStep(this.scout, this),
             new CourseViewStep(this.scout, this),
         ];
@@ -924,6 +943,7 @@ class SkillPath extends Path {
             new SkillsStep(this.scout, this),
             new LevelCurrentStep(this.scout, this),
             new LevelGoalStep(this.scout, this),
+            new FilterStep(this.scout, this, DegreeFilter),
             new CourseListStep(this.scout, this),
             new CourseViewStep(this.scout, this),
         ];
@@ -1133,7 +1153,7 @@ class Step {
 
     /**
      * Gets the previous step in the path.
-     * 
+     *
      * @returns {Step|null} - The previous step object or null if it is the first step.
      */
     prevStep() {
@@ -1156,12 +1176,14 @@ class Step {
         // Set button tile to tooltip langsting of next step.
         if (nextStep) {
             this.scout.nextButton.setAttribute(
-                "title", Lang.getString(nextStep.name + "step:tooltip")
+                "title",
+                Lang.getString(nextStep.name + "step:tooltip")
             );
         }
         if (prevStep) {
             this.scout.prevButton.setAttribute(
-                "title", Lang.getString(prevStep.name + "step:tooltip")
+                "title",
+                Lang.getString(prevStep.name + "step:tooltip")
             );
         }
 
@@ -2357,6 +2379,86 @@ class LevelGoalStep extends Step {
 }
 
 /**
+ * Class representing the level goal step.
+ * @extends Step
+ */
+class FilterStep extends Step {
+    /**
+     * Represents the filter that is displayed in the filter step.
+     * @type {Filter}
+     */
+    filter;
+
+    /**
+     * Reference to self for compatiability with filter.
+     * @type {FilterStep}
+     */
+    step;
+
+    /**
+     * Create a level goal step.
+     * @param {Scout} scout - The scout object.
+     * @param {Path} path - The parent path object.
+     * @param {class} FilterClass - The Filter class to be loaded in this step.
+     */
+    constructor(scout, path, FilterClass) {
+        super(scout, path);
+        this.name = "filter";
+        this.filter = new FilterClass(this);
+        this.step = this;
+        this.on;
+    }
+
+    /**
+     * Called when the filter changes.
+     */
+    onChange() {
+        this.path.preloadSearch();
+    }
+
+    /**
+     * Check the prerequisites for the level goal step.
+     * @return {boolean} Return true if the current path is equal to the name of the path and the account has skills.
+     */
+    checkPrerequisites() {
+        return (
+            this.scout.account.getPath() == this.path.name &&
+            Object.keys(this.scout.account.getSkills()).length
+        );
+    }
+
+    prepareTemplate() {
+        this.partials.filter = this.filter.name + "-filter";
+        this.data.heading = Lang.getString("filter" + this.filter.name);
+        this.data.description = Lang.getString(
+            "filter" + this.filter.name + "task"
+        );
+        this.data.help = Lang.getString("filter" + this.filter.name + "help");
+        this.data.helpintro = Lang.getString(
+            "filter" + this.filter.name + "helpintro"
+        );
+        this.template = this.filter.template;
+    }
+
+    /**
+     * Initialize the rendering of the level goal step.
+     * @override Step.initRender
+     */
+    initRender() {
+        super.initRender();
+
+        this.filter.initRender();
+    }
+
+    /**
+     * Update the level goal step.
+     */
+    async update() {
+        await super.update();
+    }
+}
+
+/**
  * Class representing a course list step.
  * @extends Step
  */
@@ -2463,6 +2565,10 @@ class SearchStep extends Step {
         }
     }
 
+    /**
+     * Updates the state of the scout.
+     * @returns {boolean} Returns true if the state has changed, false otherwise.
+     */
     updateState() {
         const skills = this.scout.account.getSkills();
         for (const skill of Object.values(skills)) {
@@ -2493,6 +2599,7 @@ class SearchStep extends Step {
         if (this.lastState == newState) {
             return false;
         }
+
         this.lastState = newState;
         return true;
     }
@@ -2650,6 +2757,7 @@ class CourseListStep extends SearchStep {
     async update() {
         await super.update();
 
+        this.filterMenu.update();
         await this.updateCourseResults();
         this.updateFavAction();
     }
@@ -2753,8 +2861,9 @@ class CourseListStep extends SearchStep {
                 const accordions = this.resultList.querySelectorAll("details");
                 accordions.forEach((accordion) => {
                     if (accordion.open) {
-                        this.openAccordionTitle =
-                            accordion.querySelector("summary .result-list__label").textContent;
+                        this.openAccordionTitle = accordion.querySelector(
+                            "summary .result-list__label"
+                        ).textContent;
                     }
                 });
                 this.scrollPosition = this.node.parentNode.scrollTop;
@@ -2833,8 +2942,8 @@ class CourseListStep extends SearchStep {
             } else {
                 count = currentLevelResults.length;
             }
-            countstring = this.getKurseCountString(count)
-            
+            countstring = this.getKurseCountString(count);
+
             if (this.maxSearchResults > 0) {
                 currentLevelResults = currentLevelResults.slice(
                     0,
@@ -2866,18 +2975,45 @@ class CourseListStep extends SearchStep {
         return data;
     }
 
-    /**
-     * Update course results for the course list step.
-     */
-    async updateCourseResults() {
-        // Get course suggestions and set template data.
-        const newState = this.updateState();
-        if (!this.scout.searchResults || newState) {
-            const results = await this.search();
-            if (results) {
-                this.scout.searchResults = results;
+    async preloadSearch() {
+        // bool newState = true if the state has changed since the last search
+        let newState = this.updateState();
+        if (!newState) {
+            if (this.searchPromise) {
+                // A search is in progress, so wait for it to finish.
+                await this.searchPromise;
             }
-        } else if (!this.rebuildOnUpdate()) {
+            // The state has not changed since the last search, so dont search again.
+            return;
+        }
+
+        // Create a unique id for this search.
+        this.searchId = Symbol();
+        const currentSearchId = this.searchId;
+
+        // If there is already a search in progress, overwrite it with this one.
+        this.searchPromise = this.search();
+        const results = await this.searchPromise;
+
+        // Check if this is the most recent search
+        if (currentSearchId !== this.searchId) {
+            // This is not the most recent search, so don't update the state
+            return;
+        }
+
+        // This is the most recent search, so update the state
+        this.searchPromise = null;
+        this.lastSearchResults = results;
+        if (results) {
+            this.scout.searchResults = results;
+        }
+    }
+
+    async updateCourseResults() {
+        // Preload search if needed.
+        await this.preloadSearch();
+
+        if (!this.rebuildOnUpdate()) {
             return;
         }
 
@@ -2905,8 +3041,8 @@ class CourseListStep extends SearchStep {
                 // Find the openAccordion by title attribute.
                 accordions.forEach((accordion) => {
                     if (
-                        accordion.querySelector("summary .result-list__label").textContent ==
-                        this.openAccordionTitle
+                        accordion.querySelector("summary .result-list__label")
+                            .textContent == this.openAccordionTitle
                     ) {
                         accordion.open = true;
                         setTimeout(() => {
@@ -3141,7 +3277,7 @@ class Filter {
 
     /**
      * Create a filter.
-     * @param {Menu} menu - The menu object.
+     * @param {FilterMenu|FilterStep} menu - The menu object.
      */
     constructor(menu) {
         this.menu = menu;
@@ -3159,7 +3295,7 @@ class Filter {
      * Initialize rendering of the filter.
      */
     initRender() {
-        this.node = this.menu.node.querySelector("#filter-" + this.name);
+        this.node = this.menu.node.querySelector(".filter-" + this.name);
         this.selectedChoice = this.menu.step.scout.account.getFilter(this.name);
 
         this.node.addEventListener("change", (event) => this.onChange(event));
@@ -3370,7 +3506,7 @@ class LocationFilter extends Filter {
      * @override Filter.initRender
      */
     initRender() {
-        this.node = this.menu.node.querySelector("#filter-" + this.name);
+        this.node = this.menu.node.querySelector(".filter-" + this.name);
         this.selectedChoice = this.menu.step.scout.account.getFilter(this.name);
 
         if (!this.selectedChoice) {
@@ -3551,14 +3687,15 @@ class DegreeFilter extends Filter {
     initRender() {
         super.initRender();
 
-        if (!this.selectedChoice) {
-            this.selectedChoice = null;
-        }
-
         this.choices = this.node.querySelectorAll("input");
         this.defaultChoice = this.choices[0];
 
+        if (!this.selectedChoice) {
+            this.selectedChoice = this.defaultChoice.value;
+        }
+
         this.loadChoice();
+        this.storeChoice();
     }
 
     /**
@@ -3585,11 +3722,7 @@ class DegreeFilter extends Filter {
             'input[type="radio"]:checked'
         );
 
-        if (selectedInput == this.defaultChoice) {
-            this.selectedChoice = null;
-        } else {
-            this.selectedChoice = selectedInput.value;
-        }
+        this.selectedChoice = selectedInput.value;
 
         this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
     }
@@ -3598,7 +3731,7 @@ class DegreeFilter extends Filter {
      * Reset the price filter.
      */
     reset() {
-        this.selectedChoice = null;
+        this.selectedChoice = this.defaultChoice.value;
         this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
         this.loadChoice();
 
@@ -3610,7 +3743,7 @@ class DegreeFilter extends Filter {
      * @returns {boolean} A boolean representing wether the price filter is active or not.
      */
     isActive() {
-        if (this.selectedChoice !== null) {
+        if (this.selectedChoice !== this.defaultChoice.value) {
             return true;
         }
         return false;
@@ -3771,7 +3904,7 @@ class FilterMenu {
             const html = await filter.render();
             data.filters.push({
                 name: filter.name,
-                label: Lang.getString("courseliststep:filter" + filter.name),
+                label: Lang.getString("filter" + filter.name),
                 html: html,
             });
         }
@@ -3833,10 +3966,6 @@ class FilterMenu {
         this.filterNav.addEventListener("change", () => this.updateFilterNav());
         this.updateFilterNav();
 
-        for (const filter of this.filters) {
-            filter.initRender();
-        }
-
         this.bubbleNode = document.querySelector(".filter-bubble");
 
         this.update();
@@ -3846,6 +3975,10 @@ class FilterMenu {
      * Update the filter menu based on the active filters.
      */
     update() {
+        for (const filter of this.filters) {
+            filter.initRender();
+        }
+
         let filtercount = 0;
 
         this.filterNavChoices.forEach((node) => {
@@ -3899,7 +4032,7 @@ class FilterMenu {
     updateFilterNav() {
         const selectedInput = this.filterNav.querySelector("input:checked");
         this.filterChoices.forEach((node) => {
-            if (node.id == selectedInput.value) {
+            if (node.classList.contains(selectedInput.value)) {
                 show(node);
             } else {
                 hide(node);
@@ -4306,6 +4439,12 @@ class Lang {
     static cachedTemplates = {};
 
     /**
+     * The view id used as a unique identifier for each view.
+     * @type {number}
+     */
+    static viewId = 0;
+
+    /**
      * Initializes the Lang class with the specified language code.
      * If no language code is provided, it defaults to "de" (German).
      * @param {string} [langcode="de"] - The language code to initialize with.
@@ -4380,6 +4519,8 @@ class Lang {
             }
         }
         view.lang = Lang.langstrings;
+        // Create random uid for each view.
+        view.uid = Lang.viewId++;
         return Mustache.render(
             Mustache.render(template, view, partialTemplates, config),
             view

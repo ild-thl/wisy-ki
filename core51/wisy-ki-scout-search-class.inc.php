@@ -175,9 +175,7 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 		// Degree filter.
 		if (isset($filters->degree)) {
 			if ($filters->degree) {
-				$querystring .= ', ' . utf8_decode('ABSCHLÜSSE');
-			} else {
-				$querystring .= ', ' . utf8_decode('-ABSCHLÜSSE');
+				$querystring .= ', ' . utf8_decode($filters->degree);
 			}
 		}
 

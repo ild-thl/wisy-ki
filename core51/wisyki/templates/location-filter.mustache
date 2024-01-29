@@ -1,33 +1,33 @@
-<fieldset id="filter-location" class="filter-choice">
-    <legend>{{ lang.courseliststep:filterlocationtask }}</legend>
+<fieldset id="{{uid}}-filter-location" class="filter-choice filter-location">
+    <legend>{{ lang.filterlocationtask }}</legend>
     <div class="filter-location-name-input">
         <section class="autocomplete-box">
             <div class="autocomplete-box__input">
             <i class="icon search-icon"></i>
-                <input type="text" id="filter-location-name" name="filter-location-name" class="scout-autocomplete" placeholder="{{ lang.courseliststep:filterlocationname }}" autocomplete="off">
+                <input type="text" id="{{uid}}-filter-location-name" name="{{uid}}-filter-location-name" class="scout-autocomplete" placeholder="{{ lang.filterlocationname }}" autocomplete="off">
                 <button class="clear-input" title="{{ lang.clearinput }}"><i class="icon close-icon"></i></button>
             </div>
-            <output name="filter-location-name-autocomplete" for="filter-location-name"></output>
+            <output name="{{uid}}-filter-location-name-autocomplete" for="{{uid}}-filter-location-name"></output>
         </section>
     </div>
     <div>
-        <input type="radio" id="filter-location-perimeter-none" name="filter-location" value="" checked>
-        <label for="filter-location-perimeter-none">{{ lang.courseliststep:filterlocationperimeternone }}</label>
+        <input type="radio" id="{{uid}}-filter-location-perimeter-none" name="{{uid}}-filter-location" value="" checked>
+        <label for="{{uid}}-filter-location-perimeter-none">{{ lang.filterlocationperimeternone }}</label>
     </div>
     <div>
-        <input type="radio" id="filter-location-perimeter-10" name="filter-location" value="10">
-        <label for="filter-location-perimeter-10">{{ lang.courseliststep:filterlocationperimeter10 }}</label>
+        <input type="radio" id="{{uid}}-filter-location-perimeter-10" name="{{uid}}-filter-location" value="10">
+        <label for="{{uid}}-filter-location-perimeter-10">{{ lang.filterlocationperimeter10 }}</label>
     </div>
     <div>
-        <input type="radio" id="filter-location-perimeter-25" name="filter-location" value="25">
-        <label for="filter-location-perimeter-25">{{ lang.courseliststep:filterlocationperimeter25 }}</label>
+        <input type="radio" id="{{uid}}-filter-location-perimeter-25" name="{{uid}}-filter-location" value="25">
+        <label for="{{uid}}-filter-location-perimeter-25">{{ lang.filterlocationperimeter25 }}</label>
     </div>
     <div>
-        <input type="radio" id="filter-location-perimeter-50" name="filter-location" value="50">
-        <label for="filter-location-perimeter-50">{{ lang.courseliststep:filterlocationperimeter50 }}</label>
+        <input type="radio" id="{{uid}}-filter-location-perimeter-50" name="{{uid}}-filter-location" value="50">
+        <label for="{{uid}}-filter-location-perimeter-50">{{ lang.filterlocationperimeter50 }}</label>
     </div>
     <div>
-        <input type="radio" id="filter-location-perimeter-500" name="filter-location" value="500">
-        <label for="filter-location-perimeter-500">{{ lang.courseliststep:filterlocationperimeter500 }}</label>
+        <input type="radio" id="{{uid}}-filter-location-perimeter-500" name="{{uid}}-filter-location" value="500">
+        <label for="{{uid}}-filter-location-perimeter-500">{{ lang.filterlocationperimeter500 }}</label>
     </div>
 </fieldset>
