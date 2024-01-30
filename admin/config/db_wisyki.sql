@@ -187,3 +187,40 @@ ALTER TABLE `x_scout_tags_freq`
   ADD PRIMARY KEY (`tag_id`);
 
 -- --------------------------------------------------------
+
+CREATE TABLE `kompetenz_blacklist` (
+  `id` int(11) NOT NULL,
+  `url` varchar(255) COLLATE latin1_general_ci NOT NULL,
+  `title` varchar(255) COLLATE latin1_general_ci NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+
+--
+-- Daten für Tabelle `kompetenz_blacklist`
+--
+
+INSERT INTO `kompetenz_blacklist` (`id`, `url`, `title`) VALUES
+(1, 'http://data.europa.eu/esco/skill/a50c6a0a-5171-4be6-aa2b-50fe4d025d45', '3D-CAD-Schuhprototypen entwerfen'),
+(2, 'http://data.europa.eu/esco/skill/f22dd07b-cb0f-4b18-ba54-d922dfaa8c14', 'CAD-Technik für Leisten verwenden'),
+(3, 'http://data.europa.eu/esco/skill/061f1c12-9811-46f7-ab3e-1d28367d6c73', 'CAD-Technik für Sohlen verwenden'),
+(4, 'http://data.europa.eu/esco/skill/2b1f8e85-6693-47c0-a352-799ebfdfc8e4', 'Leisten für Schuhwerk erstellen'),
+(5, 'http://data.europa.eu/esco/skill/f22dd07b-cb0f-4b18-ba54-d922dfaa8c14', 'CAD-Technik für Leisten verwenden');
+
+--
+-- Indizes der exportierten Tabellen
+--
+
+--
+-- Indizes für die Tabelle `kompetenz_blacklist`
+--
+ALTER TABLE `kompetenz_blacklist`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT für exportierte Tabellen
+--
+
+--
+-- AUTO_INCREMENT für Tabelle `kompetenz_blacklist`
+--
+ALTER TABLE `kompetenz_blacklist`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
