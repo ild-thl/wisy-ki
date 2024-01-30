@@ -794,11 +794,13 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 		$whereoldornoembedding = ""; // Set default.
 		
 		$updateall = isset($_REQUEST['updateAll']) && ($_REQUEST['updateAll'] == true || $_REQUEST['updateAll'] == '');
+		$customTime = isset($_REQUEST['customTime']) && !empty($_REQUEST['customTime']) ? $_REQUEST['customTime'] : null;
+
 		if (!$updateall) {
 			$whereoldornoembedding = "AND (
 				-- Courses without embedding or with old embedding
 				ke.kurs_id IS NULL -- No embedding present
-				OR ke.date_modified < k.date_modified -- Embedding older than kurs
+				OR ke.date_modified < " . ($customTime ? "'$customTime'" : "k.date_modified") . " -- Embedding older than kurs or custom time
 			)";
 		}
 
@@ -819,6 +821,7 @@ class WISY_KI_SYNC_RENDERER_CLASS {
 				)
 				GROUP BY k.id, t.thema
 				$limit";
+		
 		// execute the SQL query and retrieve the courses
 		if (!$db->query($sql)) {
 			$this->log("Error executing sql: $sql");

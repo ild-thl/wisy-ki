@@ -364,7 +364,7 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 			}
 			
 			// Add to ai suggestion if score is higer than 85% or mostSkillsMatched is true.
-			if ($semanticMatches[$i]['score'] > .85 OR $mostSkillsMatched) {
+			if ($semanticMatches[$i]['score'] > .83 OR $mostSkillsMatched) {
 				$semanticMatches[$i]['reason'][] = 'semanticMatch';
 				$ai_suggestions[] = $semanticMatches[$i];
 			}
@@ -547,10 +547,11 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 		$matchedTags = [];
 		$otherTags = [];
 		foreach ($this->skilltags as $skilltag) {
+			$skilltag = utf8_encode($skilltag);
 			if (in_array($skilltag, $tags)) {
 				$skillMatches++;
 				$matchedTags[] = array(
-					"url" => "/search?qs=" . urlencode(utf8_decode($skilltag)),
+					"url" => "/search?qs=" . urlencode($skilltag),
 					"label" => $skilltag
 				);
 			}
