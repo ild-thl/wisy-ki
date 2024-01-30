@@ -1522,11 +1522,9 @@ class OccupationSkillsStep extends Step {
         const skills = await this.getRelevantOccupationSkills();
 
         this.data.showmore = false;
-        this.data.showmore = false;
 
         if (skills.length) {
-            if (skills.length > 10) {
-                this.data.showmore = true;
+            if (skills.length > this.visibleSkillsCount) {
                 this.data.showmore = true;
             }
 
@@ -2540,6 +2538,39 @@ class SearchStep extends Step {
         return filteredResults;
     }
 
+    async preloadSearch() {
+        // bool newState = true if the state has changed since the last search
+        let newState = this.updateState();
+        if (!newState) {
+            if (this.searchPromise) {
+                // A search is in progress, so wait for it to finish.
+                await this.searchPromise;
+            }
+            // The state has not changed since the last search, so dont search again.
+            return;
+        }
+
+        // Create a unique id for this search.
+        this.searchId = Symbol();
+        const currentSearchId = this.searchId;
+
+        // If there is already a search in progress, overwrite it with this one.
+        this.searchPromise = this.search();
+        const results = await this.searchPromise;
+
+        // Check if this is the most recent search
+        if (currentSearchId !== this.searchId) {
+            // This is not the most recent search, so don't update the state
+            return;
+        }
+
+        // This is the most recent search, so update the state
+        this.searchPromise = null;
+        if (results) {
+            this.scout.searchResults = results;
+        }
+    }
+
     /**
      * Search for courses based on the users skill goals.
      * @returns {Object} The response object containing the search ID and the number of courses found.
@@ -2976,40 +3007,6 @@ class CourseListStep extends SearchStep {
         return data;
     }
 
-    async preloadSearch() {
-        // bool newState = true if the state has changed since the last search
-        let newState = this.updateState();
-        if (!newState) {
-            if (this.searchPromise) {
-                // A search is in progress, so wait for it to finish.
-                await this.searchPromise;
-            }
-            // The state has not changed since the last search, so dont search again.
-            return;
-        }
-
-        // Create a unique id for this search.
-        this.searchId = Symbol();
-        const currentSearchId = this.searchId;
-
-        // If there is already a search in progress, overwrite it with this one.
-        this.searchPromise = this.search();
-        const results = await this.searchPromise;
-
-        // Check if this is the most recent search
-        if (currentSearchId !== this.searchId) {
-            // This is not the most recent search, so don't update the state
-            return;
-        }
-
-        // This is the most recent search, so update the state
-        this.searchPromise = null;
-        this.lastSearchResults = results;
-        if (results) {
-            this.scout.searchResults = results;
-        }
-    }
-
     async updateCourseResults() {
         // Preload search if needed.
         await this.preloadSearch();
@@ -3257,6 +3254,274 @@ class CourseViewStep extends Step {
                 icon.classList.add("star-icon");
             }
         });
+    }
+}
+
+/**
+ * Class representing a result overview step.
+ * @extends SearchStep
+ */
+class ResultOverviewStep extends SearchStep {
+    /**
+     * The template name of the result overviews result sets.
+     * @type {string}
+     */
+    resultsetsTemplatename;
+    /**
+     * Create a course list step.
+     * @param {Object} scout - The scout object.
+     * @param {Object} path - The parent path object.
+     */
+    constructor(scout, path) {
+        super(scout, path);
+        this.name = "resultoverview";
+        this.resultsetsTemplatename = "resultoverview-step-sets";
+    }
+
+    /**
+     * Prepare template for the course list step.
+     */
+    async prepareTemplate() {}
+
+    /**
+     * Initialize rendering for the course list step.
+     */
+    initRender() {
+        super.initRender();
+
+        this.resultList = this.node.querySelector(".result-list");
+    }
+
+    /**
+     * Update the course list step.
+     */
+    async update() {
+        await super.update();
+
+        await this.updateCourseResults();
+    }
+
+    /**
+     * Get template data for a set of skills.
+     * @returns {Object} The template data.
+     */
+    getTemplateData() {
+        const skills = this.scout.account.getSkills();
+        const uniquecourses = new Set();
+        const data = {
+            count: this.scout.searchResults.count,
+            sets: [],
+        };
+        let skillindex = 0;
+        this.scout.searchResults.sets.forEach((set) => {
+            let currentLevelResults = [];
+            let label = set.label.replace(/ +\(ESCO\)/, "");
+            let currentSkill;
+
+            if (!set.skill) {
+                label = Lang.getString("courseliststep:" + set.label);
+
+                const filteredResults = this.getFilteredCourselist(set.results);
+
+                if (filteredResults[""]) {
+                    currentLevelResults = filteredResults[""];
+                }
+            } else {
+                for (let skill of Object.values(skills)) {
+                    if (skill.label == set.skill.label) {
+                        currentSkill = Object.assign({}, skill);
+                        if (currentSkill.levelGoal === null) {
+                            currentSkill.levelGoal = "";
+                        }
+                    }
+                }
+
+                let levels = [""].concat(
+                    Object.values(this.scout.complevelmapping)
+                );
+                if (currentSkill.isLanguageSkill) {
+                    levels = [""].concat(
+                        Object.values(this.scout.langlevelmapping)
+                    );
+                }
+                const filteredResults = this.getFilteredCourselist(
+                    set.results,
+                    levels
+                );
+
+                currentSkill.levels = [];
+                levels.forEach((level) => {
+                    currentSkill.levels.push({
+                        level: level,
+                        levellabel: level ? level : Lang.getString("all"),
+                        count: filteredResults[level].length,
+                    });
+                });
+
+                if (filteredResults[currentSkill.levelGoal]) {
+                    currentLevelResults =
+                        filteredResults[currentSkill.levelGoal];
+                }
+                skillindex++;
+            }
+
+            let countstring = 0;
+            if (currentSkill) {
+                countstring = this.getKurseCountString(
+                    currentSkill.levels[0].count
+                );
+            } else {
+                countstring = this.getKurseCountString(
+                    currentLevelResults.length
+                );
+            }
+            const filteredSet = {
+                label: label,
+                skilllabel: set.label,
+                countstring: countstring,
+                skillnumber: skillindex,
+                results: currentLevelResults,
+            };
+            if (currentSkill) {
+                filteredSet.skill = currentSkill;
+            }
+            data.sets.push(filteredSet);
+            // Add the id of every course in filteredResults to uniquercourses set.
+            currentLevelResults.forEach((course) => {
+                uniquecourses.add(course.id);
+            });
+        });
+
+        data.count = uniquecourses.size;
+        data.skillcount = skillindex;
+
+        return data;
+    }
+
+    /**
+     * Update course results for the course list step.
+     */
+    async updateCourseResults() {
+        // Preload search if needed.
+        await this.preloadSearch();
+
+        if (!this.rebuildOnUpdate()) {
+            return;
+        }
+
+        const data = this.getTemplateData();
+
+        const html = await Lang.render(this.resultsetsTemplatename, data);
+
+        while (this.resultList.lastChild) {
+            this.resultList.removeChild(this.resultList.lastChild);
+        }
+        // Append html.
+        this.resultList.innerHTML = html;
+
+        this.setupResultsetViewAction(this.resultList);
+    }
+
+    /**
+     * Initalize the actions to display a courslist view.
+     * @param {NodeList} courselistNode - The course list node object.
+     */
+    setupResultsetViewAction(courselistNode) {
+        const viewBtns = courselistNode.querySelectorAll(".to-resultset-btn");
+        viewBtns.forEach((btn) => {
+            // Mark favourites.
+            const resultset = btn.getAttribute("resultset");
+
+            btn.addEventListener("click", (event) => {
+                this.scout.selectedResultset = resultset;
+                this.scout.update("next");
+            });
+        });
+    }
+
+    getNextButtonContent() {
+        return "Suche speichern";
+    }
+
+    hideNextButton() {
+        return false;
+    }
+}
+
+class ResultListStep extends CourseListStep {
+    /**
+     * Create a course list step.
+     * @param {Object} scout - The scout object.
+     * @param {Object} path - The parent path object.
+     */
+    constructor(scout, path) {
+        super(scout, path);
+        this.name = "resultlist";
+
+        this.filterMenu = new FilterMenu(this, () => {
+            this.filterMenu.updateCourseCount(-1);
+            debounce(async () => {
+                this.updateCourseResults();
+            }, 500)(); // Adjust the delay time (in milliseconds) as needed.
+        });
+
+        this.courselistTemplatename = "resultlist-step-courselist";
+        this.resultsetsTemplatename = "resultlist-step-sets";
+    }
+
+    /**
+     * Update the result list step.
+     */
+    async update() {
+        await super.update();
+        this.selectedResultset = this.scout.selectedResultset;
+    }
+
+    /**
+     * Check prerequisites for the course list step.
+     * @returns {boolean} A boolean representing whether the prerequisites are met or not.
+     */
+    checkPrerequisites() {
+        return (
+            this.scout.account.getPath() == this.path.name &&
+            this.scout.searchResults &&
+            this.scout.selectedResultset
+        );
+    }
+
+    /**
+     * Checks if the step has been rendered.
+     * @returns {boolean} - True if the step has been rendered, false otherwise.
+     */
+    isRendered() {
+        return (
+            document.querySelector(`#${this.name} .step`).children.length !==
+                0 && this.selectedResultset == this.scout.selectedResultset
+        );
+    }
+
+    updateState() {
+        return false;
+    }
+
+    /**
+     * Controls wether this step is supposed to be shown in the step navigation.
+     * @returns {boolean} - False.
+     */
+    showInStepNav() {
+        return false;
+    }
+
+    hideNextButton() {
+        return false;
+    }
+
+    getNextButtonContent() {
+        return "Suche speichern";
+    }
+
+    rebuildOnUpdate() {
+        return true;
     }
 }
 
