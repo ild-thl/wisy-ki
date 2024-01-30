@@ -2964,8 +2964,9 @@ class CourseListStep extends SearchStep {
                 filteredSet.extendedsearchuri = "/search?qs=" + set.label;
             }
             data.sets.push(filteredSet);
+
             // Add the id of everycourse in filteredResults to uniquercourses set.
-            currentLevelResults.forEach((course) => {
+            set.results.forEach((course) => {
                 uniquecourses.add(course.id);
             });
         }
