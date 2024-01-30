@@ -98,15 +98,11 @@ class WISY_CACHE_CLASS
 	function insert($ckey, $cvalue)
 	{
 		$ckey = $this->createKey($ckey);
-		
-		$this->db->query("SELECT ckey FROM $this->table WHERE ckey='".addslashes($ckey)."';");
-		if( !$this->db->next_record() )
-		{
-			// the leading @ makes sure, the insert is quiet, (see e-mails Fri, Nov 12, 2010 at 08:18)
-			@$this->db->query("INSERT INTO $this->table (ckey) VALUES('".addslashes($ckey)."');");
-		}
-		
-		@$this->db->query("UPDATE $this->table SET cvalue='".addslashes($cvalue)."', cdateinserted='".ftime("%Y-%m-%d %H:%M:%S")."' WHERE ckey='".addslashes($ckey)."';");
+
+		$query = "INSERT INTO $this->table (ckey, cvalue, cdateinserted) VALUES ('" . addslashes($ckey) . "', '" . addslashes($cvalue) . "', '" . ftime("%Y-%m-%d %H:%M:%S") . "') 
+				ON DUPLICATE KEY UPDATE cvalue = VALUES(cvalue), cdateinserted = VALUES(cdateinserted);";
+
+		@$this->db->query($query);
 	}
 	
 	function cleanup()
