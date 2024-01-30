@@ -1947,7 +1947,7 @@ details[open]>summary::after {
     }
 
     .course-preview__skills ul {
-
+        scrollbar-width: unset;
         /* Style scrollbar */
         &::-webkit-scrollbar {
             height: 4px;
