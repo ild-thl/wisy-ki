@@ -1311,6 +1311,10 @@ p.current-level {
     font-size: 0.8em;
 }
 
+#filter .filter-choice legend {
+    display: none;
+}
+
 ul.result-list {
     margin-top: 2em;
     list-style-type: none;

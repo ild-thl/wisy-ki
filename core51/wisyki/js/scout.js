@@ -868,9 +868,16 @@ class Path {
             if (showInNav) {
                 stepData.nav_label = ++j;
                 stepData.showInNav = showInNav;
-                stepData.tooltip = Lang.getString(
-                    this.steps[i].name + "step:tooltip"
-                );
+                // If the step is of type FilterStep, get the tooltip from the filter.
+                if (this.steps[i] instanceof FilterStep) {
+                    stepData.tooltip = Lang.getString(
+                        "filter" + this.steps[i].filter.name + "tooltip"
+                    );
+                } else {
+                    stepData.tooltip = Lang.getString(
+                        this.steps[i].name + "step:tooltip"
+                    );
+                }
             }
 
             data.steps.push(stepData);
@@ -1175,16 +1182,26 @@ class Step {
         this.scout.nextButton.innerHTML = this.getNextButtonContent();
         // Set button tile to tooltip langsting of next step.
         if (nextStep) {
-            this.scout.nextButton.setAttribute(
-                "title",
-                Lang.getString(nextStep.name + "step:tooltip")
-            );
+            let tooltip = "";
+            if (nextStep instanceof FilterStep) {
+                tooltip = Lang.getString(
+                    "filter" + nextStep.filter.name + "tooltip"
+                );
+            } else {
+                tooltip = Lang.getString(nextStep.name + "step:tooltip");
+            }
+            this.scout.nextButton.setAttribute("title", tooltip);
         }
         if (prevStep) {
-            this.scout.prevButton.setAttribute(
-                "title",
-                Lang.getString(prevStep.name + "step:tooltip")
-            );
+            let tooltip = "";
+            if (prevStep instanceof FilterStep) {
+                tooltip = Lang.getString(
+                    "filter" + prevStep.filter.name + "tooltip"
+                );
+            } else {
+                tooltip = Lang.getString(prevStep.name + "step:tooltip");
+            }
+            this.scout.prevButton.setAttribute("title", tooltip);
         }
 
         if (this.isFirst()) {
@@ -2427,8 +2444,7 @@ class FilterStep extends Step {
 
     prepareTemplate() {
         this.partials.filter = this.filter.name + "-filter";
-        this.data.heading = Lang.getString("filter" + this.filter.name);
-        this.data.description = Lang.getString(
+        this.data.heading = Lang.getString(
             "filter" + this.filter.name + "task"
         );
         this.data.help = Lang.getString("filter" + this.filter.name + "help");
@@ -2453,6 +2469,8 @@ class FilterStep extends Step {
      */
     async update() {
         await super.update();
+
+        this.filter.update();
     }
 }
 
@@ -3568,6 +3586,16 @@ class Filter {
     }
 
     /**
+     * Initialize rendering of the filter.
+     */
+    update() {
+        this.node = this.menu.node.querySelector(".filter-" + this.name);
+        this.selectedChoice = this.menu.step.scout.account.getFilter(this.name);
+
+        this.loadChoice();
+    }
+
+    /**
      * Handle change event of the filter.
      * @param {Event} event - The change event.
      */
@@ -3939,81 +3967,94 @@ class PriceFilter extends Filter {
  * Filter has two options resulting in true or false.
  * @extends Filter
  */
-class DegreeFilter extends Filter {
+// class DegreeFilter extends Filter {
+//     /**
+//      * Represents the name of the filter.
+//      * @type {string}
+//      */
+//     name = "degree";
+
+//     /**
+//      * Initialize rendering of the degree filter.
+//      * @override Filter.initRender
+//      */
+//     initRender() {
+//         super.initRender();
+
+//         this.choices = this.node.querySelectorAll("input");
+//         this.defaultChoice = this.choices[0];
+
+//         if (!this.selectedChoice) {
+//             this.selectedChoice = this.defaultChoice.value;
+//         }
+
+//         this.loadChoice();
+//         this.storeChoice();
+//     }
+
+//     /**
+//      * Set the selected choice of the degree filter or set default.
+//      */
+//     loadChoice() {
+//         if (!this.selectedChoice) {
+//             this.defaultChoice.checked = true;
+//         } else {
+//             const tobechecked = this.node.querySelector(
+//                 'input[value="' + this.selectedChoice + '"]'
+//             );
+//             if (tobechecked) {
+//                 tobechecked.checked = true;
+//             }
+//         }
+//     }
+
+//     /**
+//      * Store the selected choice of the degree filter.
+//      */
+//     storeChoice() {
+//         const selectedInput = this.node.querySelector(
+//             'input[type="radio"]:checked'
+//         );
+
+//         this.selectedChoice = selectedInput.value;
+
+//         this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
+//     }
+
+//     /**
+//      * Reset the price filter.
+//      */
+//     reset() {
+//         this.selectedChoice = this.defaultChoice.value;
+//         this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
+//         this.loadChoice();
+
+//         super.reset();
+//     }
+
+//     /**
+//      * Check if the price filter is active.
+//      * @returns {boolean} A boolean representing wether the price filter is active or not.
+//      */
+//     isActive() {
+//         if (this.selectedChoice !== this.defaultChoice.value) {
+//             return true;
+//         }
+//         return false;
+//     }
+// }
+
+/**
+ * Degree filter.
+ * Filter has two options resulting in true or false.
+ * @extends Filter
+ */
+class DegreeFilter extends CheckboxFilter {
     /**
      * Represents the name of the filter.
      * @type {string}
      */
     name = "degree";
-
-    /**
-     * Initialize rendering of the degree filter.
-     * @override Filter.initRender
-     */
-    initRender() {
-        super.initRender();
-
-        this.choices = this.node.querySelectorAll("input");
-        this.defaultChoice = this.choices[0];
-
-        if (!this.selectedChoice) {
-            this.selectedChoice = this.defaultChoice.value;
-        }
-
-        this.loadChoice();
-        this.storeChoice();
-    }
-
-    /**
-     * Set the selected choice of the degree filter or set default.
-     */
-    loadChoice() {
-        if (!this.selectedChoice) {
-            this.defaultChoice.checked = true;
-        } else {
-            const tobechecked = this.node.querySelector(
-                'input[value="' + this.selectedChoice + '"]'
-            );
-            if (tobechecked) {
-                tobechecked.checked = true;
-            }
-        }
-    }
-
-    /**
-     * Store the selected choice of the degree filter.
-     */
-    storeChoice() {
-        const selectedInput = this.node.querySelector(
-            'input[type="radio"]:checked'
-        );
-
-        this.selectedChoice = selectedInput.value;
-
-        this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
-    }
-
-    /**
-     * Reset the price filter.
-     */
-    reset() {
-        this.selectedChoice = this.defaultChoice.value;
-        this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
-        this.loadChoice();
-
-        super.reset();
-    }
-
-    /**
-     * Check if the price filter is active.
-     * @returns {boolean} A boolean representing wether the price filter is active or not.
-     */
-    isActive() {
-        if (this.selectedChoice !== this.defaultChoice.value) {
-            return true;
-        }
-        return false;
-    }
 }
 
 /**
@@ -4234,6 +4275,10 @@ class FilterMenu {
 
         this.bubbleNode = document.querySelector(".filter-bubble");
 
+        for (const filter of this.filters) {
+            filter.initRender();
+        }
+
         this.update();
     }
 
@@ -4242,7 +4287,7 @@ class FilterMenu {
      */
     update() {
         for (const filter of this.filters) {
-            filter.initRender();
+            filter.update();
         }
 
         let filtercount = 0;
@@ -4257,7 +4302,7 @@ class FilterMenu {
 
                 // Show dot for active filter in nav.
                 this.filterNavChoices.forEach((node) => {
-                    if (node.value == filter.node.id) {
+                    if (filter.node.classList.contains(node.value)) {
                         node.classList.add("active");
                     }
                 });

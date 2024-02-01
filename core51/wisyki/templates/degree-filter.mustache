@@ -1,23 +1,23 @@
 <fieldset id="{{uid}}-filter-degree" class="filter-choice filter-degree">
     <legend>{{ lang.filterdegreetask }}</legend>
     <div>
-        <input type="radio" id="{{uid}}-filter-degree-none" name="{{uid}}-filter-degree" value="-ABSCHLÜSSE" checked>
+        <input type="checkbox" id="{{uid}}-filter-degree-none" name="{{uid}}-filter-degree" value="" checked>
         <label for="{{uid}}-filter-degree-none">{{ lang.filterdegreenone }}</label>
     </div>
     <div>
-        <input type="radio" id="{{uid}}-filter-degree-nohei" name="{{uid}}-filter-degree" value="-STUDIUM">
+        <input type="checkbox" id="{{uid}}-filter-degree-nohei" name="{{uid}}-filter-degree" value="-STUDIUM">
         <label for="{{uid}}-filter-degree-nohei">{{ lang.filterdegreenohei }}</label>
     </div>
     <div>
-        <input type="radio" id="{{uid}}-filter-degree-noretraining" name="{{uid}}-filter-degree" value="-Aufstiegsfortbildung">
-        <label for="{{uid}}-filter-degree-noretraining">{{ lang.filterdegreenoretraining }}</label>
-    </div>
-    <div>
-        <input type="radio" id="{{uid}}-filter-degree-noapprenticeship" name="{{uid}}-filter-degree" value="-SCHULABSCHLÜSSE, -AUSBILDUNG (schulisch), -Ausbildungsberufe">
+        <input type="checkbox" id="{{uid}}-filter-degree-noapprenticeship" name="{{uid}}-filter-degree" value="-SCHULABSCHLÜSSE, -AUSBILDUNG (schulisch), -Ausbildungsberufe">
         <label for="{{uid}}-filter-degree-noapprenticeship">{{ lang.filterdegreenoapprenticeship }}</label>
     </div>
     <div>
-        <input type="radio" id="{{uid}}-filter-degree-all" name="{{uid}}-filter-degree" value="ABSCHLÜSSE">
-        <label for="{{uid}}-filter-degree-all">{{ lang.filterdegreeall }}</label>
+        <input type="checkbox" id="{{uid}}-filter-degree-noretraining" name="{{uid}}-filter-degree" value="-Umschulung">
+        <label for="{{uid}}-filter-degree-noretraining">{{ lang.filterdegreenoretraining }}</label>
+    </div>
+    <div>
+        <input type="checkbox" id="{{uid}}-filter-degree-advancedfurthertraining" name="{{uid}}-filter-degree" value="-Aufstiegsfortbildung">
+        <label for="{{uid}}-filter-degree-advancedfurthertraining">{{ lang.filterdegreeadvancedfurthertraining }}</label>
     </div>
 </fieldset>

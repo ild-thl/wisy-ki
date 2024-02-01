@@ -173,10 +173,8 @@ class WISY_KI_SCOUT_SEARCH_CLASS extends WISY_SEARCH_CLASS {
 		}
 
 		// Degree filter.
-		if (isset($filters->degree)) {
-			if ($filters->degree) {
-				$querystring .= ', ' . utf8_decode($filters->degree);
-			}
+		if (isset($filters->degree) && !empty($filters->degree)) {
+			$querystring .= ', ' . join(', ', $filters->degree);
 		}
 
 		// Only get courses with tags Berufliche Bildung or Sprache.
