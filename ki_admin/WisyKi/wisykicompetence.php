@@ -10,7 +10,7 @@ class WISY_KI_COMPETENCE_CLASS
 	public $firstnum = 10;
 	public $kibot = 2;
 	private $api_endpoint;
-	private $api_llm_endpoint;
+
 
 	function __construct($db = null)
 	{
@@ -48,6 +48,7 @@ class WISY_KI_COMPETENCE_CLASS
 
 		$this->api_endpoint = WISYKI_API;
 		$this->api_llm_endpoint = WISYKI_LLM_API;
+		$this->api_training_endpoint = WISYKI_TRAINING_API;
 	}
 	function correctsql($sql, $level, $selectedid = NULL)
 	{
@@ -172,8 +173,16 @@ class WISY_KI_COMPETENCE_CLASS
 		}
 		return $ret;
 	}
-	//Find competences in KI
-	function WisyKi_competence_search($controls, $id, $use_llm = false)
+	//Set competences as trainingsdata
+	function WisyKi_set_trainingsdata($controls, $id)
+	{
+		foreach ($controls as $param) {
+			if ($param->name == "f_kompetenz")
+				$descr = $param->dbval;
+		}
+	}
+	//Find competences in KI and send training data to KI
+	function WisyKi_handle_competence($controls, $id, $use_llm = false, $training = null)
 	{
 		$hier_url = array();
 		foreach ($controls as $param) {
@@ -216,52 +225,76 @@ class WISY_KI_COMPETENCE_CLASS
 					$keywords[] = utf8_encode($this->db->Record['stichwort']);
 				}
 			}
-			$sql = 'SELECT attr_url, stichwort FROM kurse_kompetenz, stichwoerter WHERE kurse_kompetenz.primary_id = "' . $id  . '" AND kurse_kompetenz.suggestion = "0" AND stichwoerter.id = kurse_kompetenz.attr_id';
+			$sql = 'SELECT kurse_kompetenz.attr_id, kurse_kompetenz.attr_url, stichwoerter.stichwort, kurse_kompetenz.suggestion, kurse_kompetenz.preselected,  stichwoerter.esco_url FROM kurse_kompetenz LEFT JOIN  stichwoerter ON stichwoerter.id = kurse_kompetenz.attr_id  
+			 WHERE kurse_kompetenz.primary_id = ' . $id;
 			$skills = array();
 			$this->db->query($sql);
 			while ($this->db->next_record()) {
-				$skills[] = array(
-					"title" => utf8_encode($this->db->Record['stichwort']),
-					"uri" => $this->db->Record['attr_url'],
-					"valid" => true
-				);
+				//	if ((isset($training) || (!isset($training) &&  ($this->db->Record['suggestion'] == 0) )) && $this->db->Record['esco_url']!=null)
+				if ($this->db->Record['esco_url'] != null && !(($this->db->Record['suggestion'] == 1) && ($this->db->Record['preselected'] == 0)))
+					
+						$skills[] = array(
+							"id" => $this->db->Record['attr_id'],
+							"title" => utf8_encode($this->db->Record['stichwort']),
+							"uri" => $this->db->Record['esco_url'],
+							"taxonomy" => "ESCO",
+							"valid" => (($this->db->Record['suggestion'] == 1)) ? false : true
+						);
 			}
 		}
-		if ($use_llm)
-			$url = $this->api_llm_endpoint . "/chatsearch";
+		if (!isset($lernziele) || empty($lernziele))
+			$docforsearch = utf8_encode($titel)  . " " . utf8_encode(implode(" ", $keywords)) . " " . utf8_encode($descr);
 		else
-			$url = $this->api_endpoint . "/chatsearch";
-		$curl_session = curl_init($url);
-		if ($use_llm) {
-			$search_params = array(
+			$docforsearch =  utf8_encode($lernziele);
+		if (isset($training)) {
+			$url = $this->api_training_endpoint . "/updateCourseSkills";
+			$curl_session = curl_init($url);
+			$search_params = array(array(
 				// 'searchterms' => $kw,
 				// 'doc' => utf8_encode($titel) . " " . utf8_encode($lernziele) . " " . utf8_encode(implode(" ", $keywords))  .  " " . utf8_encode($zielgruppe) . " " . utf8_encode($descr),
-				'doc' => utf8_encode($titel) . " " . utf8_encode($lernziele) . " " . utf8_encode(implode(" ", $keywords)) . " " . utf8_encode($descr),
-				'skills' => $skills,
-				'top_k' => 20,
-				'strict' => $this->kibot,
-				'use_llm' => true,
-	//			'llm_validation' => true,
-				'filterconcepts' => $hier_url,
-				'skillfit_validation' => true
-			);			
+				'id' => $_SERVER['HTTP_HOST'] . "-" . $id,
+				'doc' => $docforsearch,
+				'validationResults' => $skills
+			));
 		} else {
-			$search_params = array(
-				// 'searchterms' => $kw,
-				// 'doc' => utf8_encode($titel) . " " . utf8_encode($lernziele) . " " . utf8_encode(implode(" ", $keywords))  .  " " . utf8_encode($zielgruppe) . " " . utf8_encode($descr),
-				'doc' => utf8_encode($titel) . " " . utf8_encode($lernziele) . " " . utf8_encode(implode(" ", $keywords)) . " " . utf8_encode($descr),
-				'top_k' => 20,
-				'strict' => $this->kibot,
-				'skills' => $skills,
+			if ($use_llm)
+				$url = $this->api_llm_endpoint . "/chatsearch";
 
-				//'doc' => utf8_encode($descr),
-				// 'exclude_irrelevant' => true,
-				// 'extract_keywords' => true,
-				// 'schemes' => "http://data.europa.eu/esco/concept-scheme/member-skills",
-				'filterconcepts' => $hier_url,
-				'openai_api_key' => OPENAI_API_KEY,
-				// 'min_relevancy' => $this->minRel
-			);
+			else
+				$url = $this->api_endpoint . "/chatsearch";
+			$curl_session = curl_init($url);
+			if ($use_llm) {
+				$search_params = array(
+					// 'searchterms' => $kw,
+					// 'doc' => utf8_encode($titel) . " " . utf8_encode($lernziele) . " " . utf8_encode(implode(" ", $keywords))  .  " " . utf8_encode($zielgruppe) . " " . utf8_encode($descr),
+					'doc' => $docforsearch,
+					'skills' => $skills,
+					'top_k' => 20,
+					'strict' => $this->kibot,
+					'use_llm' => true,
+					//			'llm_validation' => true,
+					'filterconcepts' => $hier_url,
+					'skillfit_validation' => true,
+					'skill_taxonomy' => "ESCO"
+				);
+			} else {
+				$search_params = array(
+					// 'searchterms' => $kw,
+					// 'doc' => utf8_encode($titel) . " " . utf8_encode($lernziele) . " " . utf8_encode(implode(" ", $keywords))  .  " " . utf8_encode($zielgruppe) . " " . utf8_encode($descr),
+					'doc' => $docforsearch,
+					'top_k' => 20,
+					'strict' => $this->kibot,
+					'skills' => $skills,
+
+					//'doc' => utf8_encode($descr),
+					// 'exclude_irrelevant' => true,
+					// 'extract_keywords' => true,
+					// 'schemes' => "http://data.europa.eu/esco/concept-scheme/member-skills",
+					'filterconcepts' => $hier_url,
+					'openai_api_key' => OPENAI_API_KEY,
+					// 'min_relevancy' => $this->minRel
+				);
+			}
 		}
 		$json = json_encode($search_params);
 
@@ -278,24 +311,44 @@ class WISY_KI_COMPETENCE_CLASS
 			return;
 		}
 
-		
+
 		$result = curl_exec($curl_session);
 		curl_close($curl_session);
 
 		$result = json_decode($result, true);
-		$res = array();
-		if (isset($result['results'])) {
-			$resu = $result['results'];
-			if (is_array($resu))
-				for ($c1 = 0; $c1 < sizeof((array) $resu); $c1++) {
-					if ($c1 < $this->firstnum)
-						$res[] = $resu[$c1];
-					else
-						break;
+
+		if (!isset($training)) {
+			$res = array();
+			if (isset($result['results'])) {
+				$resu = $result['results'];
+				if (is_array($resu))
+					for ($c1 = 0; $c1 < sizeof((array) $resu); $c1++) {
+						if ($c1 < $this->firstnum)
+							$res[] = $resu[$c1];
+						else
+							break;
+					}
+			} else
+				return false;
+			foreach ($skills as $skill) {
+				if ($skill['valid'] == false) {
+					$this->db->query("DELETE FROM kurse_kompetenz WHERE attr_id=" . $skill['id'] . " AND primary_id=" . $id);
+					$this->db->query("DELETE FROM kurse_stichwort WHERE attr_id=" . $skill['id'] . " AND primary_id=" . $id);
 				}
-		} else
+			}
+			return $res;
+		} else if (isset($result['updated_courses'])) {
+			foreach ($skills as $skill) {
+				if ($skill['valid'] == false) {
+					$this->db->query("DELETE FROM kurse_kompetenz WHERE attr_id=" . $skill['id'] . " AND primary_id=" . $id);
+					$this->db->query("DELETE FROM kurse_stichwort WHERE attr_id=" . $skill['id'] . " AND primary_id=" . $id);
+				}
+			}
+
+			return true;
+		} else {
 			return false;
-		return $res;
+		}
 	}
 
 	// function getESCObyText($search)

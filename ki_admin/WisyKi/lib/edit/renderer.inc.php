@@ -115,7 +115,8 @@ class EDIT_RENDERER_CLASS
 	private $esco_type = null;
 	private $no_paging;
 	private $bold_tocompetence = false;
-	private $bold_lock;
+	private $bold_lock = false;
+	private $bold_Ki = false;
 
 
 
@@ -528,6 +529,7 @@ class EDIT_RENDERER_CLASS
 		if ($this->find_other_preselected($this->data->dba, $id, 1)) {
 			$this->bold_lock = true;
 			$this->bold_tocompetence = true;
+			$this->bold_Ki = true;
 		}
 
 		$this->defhide_id = 1; // note: the ID is only guaranteed to be unique inside the same object! if objects are duplicated, they will have the same IDs!
@@ -665,8 +667,13 @@ class EDIT_RENDERER_CLASS
 					// echo '<input class="esco" style="background-color: #FFE190; border-style: none" type="submit"  name="submit_esco" value="ESCO-Kompetenzvorschlaege">&nbsp&nbsp</input>';
 					// echo '</span>';
 					//echo '<div onclick="rem_esco_proposual(index.php?table=escocategories&rtypes=ESCO&orderby=kategorie ASC);" > ESCO-Suche nach Kompetenzen </div>';
-					echo '<span class="e_hint" title="Dieser Vorgang kann laenger als 30 Sekunden dauern und wird nach 60 Sekunden abgebrochen.">';
-					echo '<input class="esco" style="background-color: #FFE190; border-style: none" type="submit"  name="submit_ki_esco" value="KI-ESCO-Kompetenzvorschlaege">&nbsp&nbsp</input>';
+					$boldout = ($this->bold_Ki) ? '; font-weight: bold' : '';
+					echo '<span class="e_hint" title="Dieser Vorgang kann laenger als 30 Sekunden dauern und wird nach 60 Sekunden abgebrochen. Vorausgewaelte Vorschlaege werden als nicht passend notiert.">';
+					echo '<input class="esco" style="background-color: #FFE190; border-style: none' . $boldout . '"  type="submit"  name="submit_ki_esco" value="Ki-ESCO-Kompetenzvorschlaege">&nbsp&nbsp</input>';
+					echo '</span>';
+					$boldout = ($this->bold_Ki) ? '; font-weight: bold' : '';
+					echo '<span class="e_hint" title="Die Kompetenzen dieses Kurses sollen als Trainingsdaten für die Ki-ESCO-Kompetenzvorschläge genutzt werden.  Vorausgewaelte Vorschlaege werden als nicht passend notiert.">';
+					echo '<input class="esco" style="background-color: #FFE190; border-style: none' . $boldout . '"  type="submit"  name="ki_training" value="Ki-Trainingsdaten">&nbsp&nbsp</input>';
 					echo '</span>';
 					echo '<span class="e_hint" title="Alle angezeigten Kompetenzvorschlaege werden als Kompetenz uebernommen.">';
 					echo '<input class="esco"   style="background-color: #FFE190; border-style: none"  type="submit" name="submit_vorschlaege" value="Vorschlaege uebernehmen">&nbsp&nbsp</input>';
@@ -676,10 +683,10 @@ class EDIT_RENDERER_CLASS
 					echo '</span>';
 					echo '<span class="e_hint" title="Nur die vorausgewaehlten Kompetenzvorschlaege werden als Kompetenz uebernommen.">';
 					$boldout = ($this->bold_tocompetence) ? '; font-weight: bold' : '';
-					echo '<input class="esco"  style="background-color: #FFE190; border-style: none' . $boldout . '"  type="submit" name="submit_preselected" value="Vorausgewaehlte Vorschlaege uebernehmen">&nbsp&nbsp</input>';
+					echo '<input class="esco"  style="background-color: #FFE190; border-style: none' . $boldout . '"  type="submit" name="submit_preselected" value="Vorausgewaehlte uebernehmen">&nbsp&nbsp</input>';
 					echo '</span>';
 					echo '<span class="e_hint" title="ESCO-Kompetenzsuche mit Hilfe der ESCO-Hierarchie">';
-					echo '<a onclick="rem_esco_proposual(this); return;"  href="#index.php?table=escocategories&rtypes=ESCO&escolevel=1&orderby=kategorie ASC">Hierarchiesuche nach ESCO-Kompetenzen   </a>';
+					echo '<a onclick="rem_esco_proposual(this); return;"  href="#index.php?table=escocategories&rtypes=ESCO&escolevel=1&orderby=kategorie ASC">Hierarchiesuche  </a>';
 					echo '</span>';
 					$boldout = ($this->bold_lock) ? '; font-weight: bold' : '';
 					echo '<span class="e_hint" title="Die vorausgewaehlten Kompetenzvorschlaege und Kompetenzen werden in die Blacklist aufgenommen.">';
@@ -916,15 +923,15 @@ class EDIT_RENDERER_CLASS
 		if (isset($_REQUEST['subseq'])) {
 			// ... subsequent call, not canceled (this is done without posting data)
 			if (
-				isset($_REQUEST['submit_apply']) || isset($_REQUEST['submit_ok']) || isset($_REQUEST['submit_esco']) || isset($_REQUEST['submit_vorschlaege'])
+				isset($_REQUEST['submit_apply']) || isset($_REQUEST['submit_ok'])  || isset($_REQUEST['submit_vorschlaege'])
 				|| isset($_REQUEST['submit_ki_esco']) || isset($_REQUEST['submit_discard']) || isset($_REQUEST['inputescoskill'])
-				|| isset($_REQUEST['submit_preselected']) || isset($_REQUEST['lock_preselected']) || isset($_REQUEST['lockcompetence'])
+				|| isset($_REQUEST['submit_preselected']) || isset($_REQUEST['lock_preselected']) || isset($_REQUEST['lockcompetence'])  || isset($_REQUEST['ki_training'])
 			) {
 				//ESCO-Vorschlaege ermitteln
-				if (isset($_REQUEST['submit_esco']) || isset($_REQUEST['inputescoskill']) || isset($_REQUEST['submit_ki_esco'])) {
+				if (isset($_REQUEST['ki_training']) || isset($_REQUEST['inputescoskill']) || isset($_REQUEST['submit_ki_esco'])) {
 					$db = new DB_Admin();
 					$res = array();
-					if (isset($_REQUEST['submit_esco']) || isset($_REQUEST['submit_ki_esco'])) {
+					if (isset($_REQUEST['ki_training']) || isset($_REQUEST['submit_ki_esco'])) {
 						$table = "stichwoerter";
 						$load_from_post_ok = $this->data->load_from_post();
 						$this->add_errors_n_warnings_from_data_(); // show errors from load_from_post()
@@ -932,13 +939,20 @@ class EDIT_RENDERER_CLASS
 							$site->msgAdd("\n" . htmlconstant('_EDIT_RECORDNOTSAVED'), 'e');
 						}
 
-
 						$comp = new WISY_KI_COMPETENCE_CLASS();
-						$use_llm = isset($_REQUEST['submit_ki_esco']);
-						$res = $comp->WisyKi_competence_search($this->data->controls, $id, $use_llm);
-						$res = blacklist_filter($res);
-						if ($res == false)
-							$site->msgAdd("\n" . "Die KI lieferte kein Ergebnis. Eventuell liefert ein erneuter Aufruf Ergebnisse.", 'e');
+						if (isset($_REQUEST['submit_ki_esco'])) {
+							$use_llm = isset($_REQUEST['submit_ki_esco']);
+							$res = $comp->WisyKi_handle_competence($this->data->controls, $id, $use_llm);
+							$res = blacklist_filter($res);
+							if ($res == false)
+								$site->msgAdd("\n" . "Die KI lieferte kein Ergebnis. Eventuell liefert ein erneuter Aufruf Ergebnisse.", 'e');
+						} else {
+							$ret = $comp->WisyKi_handle_competence($this->data->controls, $id, false, true);
+							if (!$ret)
+							   $site->msgAdd("\n" . "Die Trainingsdaten wurden nicht uebernommen.", 'i');
+							else
+							   $site->msgAdd("\n" . "Die Trainingsdaten wurden uebernommen.", 'i');
+						}
 					} else if (isset($uri)) {  //AJAX-Search of 
 						$r['title'] = $title;
 						$r['uri'] = $uri;

@@ -11,6 +11,8 @@ class WISY_KI_COMPETENCE_CLASS
 	public $kibot = 2;
 	private $api_endpoint;
 	private $api_llm_endpoint;
+	private $api_training_endpoint;
+
 
 	function __construct($db = null)
 	{
@@ -48,6 +50,7 @@ class WISY_KI_COMPETENCE_CLASS
 
 		$this->api_endpoint = WISYKI_API;
 		$this->api_llm_endpoint = WISYKI_LLM_API;
+		$this->api_training_endpoint = WISYKI_TRAINING_API;
 	}
 	function correctsql($sql, $level, $selectedid = NULL)
 	{
