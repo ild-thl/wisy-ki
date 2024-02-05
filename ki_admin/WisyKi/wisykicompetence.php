@@ -47,8 +47,6 @@ class WISY_KI_COMPETENCE_CLASS
 		}
 
 		$this->api_endpoint = WISYKI_API;
-		$this->api_llm_endpoint = WISYKI_LLM_API;
-		$this->api_training_endpoint = WISYKI_TRAINING_API;
 	}
 	function correctsql($sql, $level, $selectedid = NULL)
 	{
@@ -245,55 +243,44 @@ class WISY_KI_COMPETENCE_CLASS
 		if (!isset($lernziele) || empty($lernziele))
 			$docforsearch = utf8_encode($titel)  . " " . utf8_encode(implode(" ", $keywords)) . " " . utf8_encode($descr);
 		else
-			$docforsearch =  utf8_encode($lernziele);
+			$losforsearch =  utf8_encode($lernziele);
 		if (isset($training)) {
-			$url = $this->api_training_endpoint . "/updateCourseSkills";
+			$url = $this->api_endpoint . "/updateCourseSkills";
 			$curl_session = curl_init($url);
-			$search_params = array(array(
-				// 'searchterms' => $kw,
-				// 'doc' => utf8_encode($titel) . " " . utf8_encode($lernziele) . " " . utf8_encode(implode(" ", $keywords))  .  " " . utf8_encode($zielgruppe) . " " . utf8_encode($descr),
+			$search_params = [
 				'id' => $_SERVER['HTTP_HOST'] . "-" . $id,
-				'doc' => $docforsearch,
-				'validationResults' => $skills
-			));
+				'doc' => $losforsearch ?? $docforsearch,
+				'validationResults' => $skills,
+			];
+			
+			// Endpoint updateCourseSkills expects an array of arrays.
+			$search_params = [$search_params];
 		} else {
-			if ($use_llm)
-				$url = $this->api_llm_endpoint . "/chatsearch";
-
-			else
-				$url = $this->api_endpoint . "/chatsearch";
+			$url = $this->api_endpoint . "/chatsearch";
 			$curl_session = curl_init($url);
-			if ($use_llm) {
-				$search_params = array(
-					// 'searchterms' => $kw,
-					// 'doc' => utf8_encode($titel) . " " . utf8_encode($lernziele) . " " . utf8_encode(implode(" ", $keywords))  .  " " . utf8_encode($zielgruppe) . " " . utf8_encode($descr),
-					'doc' => $docforsearch,
-					'skills' => $skills,
-					'top_k' => 20,
-					'strict' => $this->kibot,
-					'use_llm' => true,
-					//			'llm_validation' => true,
-					'filterconcepts' => $hier_url,
-					'skillfit_validation' => true,
-					'skill_taxonomy' => "ESCO"
-				);
-			} else {
-				$search_params = array(
-					// 'searchterms' => $kw,
-					// 'doc' => utf8_encode($titel) . " " . utf8_encode($lernziele) . " " . utf8_encode(implode(" ", $keywords))  .  " " . utf8_encode($zielgruppe) . " " . utf8_encode($descr),
-					'doc' => $docforsearch,
-					'top_k' => 20,
-					'strict' => $this->kibot,
-					'skills' => $skills,
+			$search_params = array(
+				'skills' => $skills,
+				'top_k' => 20,
+				'strict' => $this->kibot,
+				'use_llm' => $use_llm, // Generate learning outcomes from doc if true.
+				'skillfit_validation' => $use_llm, // Validate and rerank predictions with pretrained cross-encoder model if true.
+				'filterconcepts' => $hier_url,
+				'skill_taxonomy' => "ESCO"
+			);
 
-					//'doc' => utf8_encode($descr),
-					// 'exclude_irrelevant' => true,
-					// 'extract_keywords' => true,
-					// 'schemes' => "http://data.europa.eu/esco/concept-scheme/member-skills",
-					'filterconcepts' => $hier_url,
-					'openai_api_key' => OPENAI_API_KEY,
-					// 'min_relevancy' => $this->minRel
-				);
+			// Use mistral or openAI-models for learning outcome generation if api keys are defined.
+			if (defined('MISTRAL_API_KEY')) {
+				$search_params['mistral_api_key'] = MISTRAL_API_KEY;
+			} elseif (defined('OPENAI_API_KEY')) {
+				$search_params['openai_api_key'] = OPENAI_API_KEY;
+			}
+
+			// Set los or doc depending on whether we have lernziele or not.
+			// This will ensure that the AI isnt trying to generate new learningoutcomes if they are already set.
+			if ($losforsearch) {
+				$search_params['los'] = $losforsearch;
+			} else {
+				$search_params['doc'] = $docforsearch;
 			}
 		}
 		$json = json_encode($search_params);
