@@ -439,8 +439,12 @@ class WISY_KI_ESCO_CLASS {
             $searchCount = (int) $suggestion['search_count'] - $minSearchCount;
 
             // Normalize similarity to a value between 0 and 1.
-            $normalizedSimilarity = ($similarity - $minSimilarity) / ($maxSimilarity - $minSimilarity);
-            $normalizedSimilarity = max(0, min(1, $normalizedSimilarity));
+            if ($maxSimilarity != 0) {
+              $normalizedSimilarity = ($similarity - $minSimilarity) / ($maxSimilarity - $minSimilarity);
+              $normalizedSimilarity = max(0, min(1, $normalizedSimilarity));
+            } else {
+              $normalizedSimilarity = 1;
+            }
             $suggestion['similarity_normalized'] = $normalizedSimilarity;
 
             // Normalize search count to a value between 0 and 1.

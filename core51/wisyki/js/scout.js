@@ -3684,7 +3684,7 @@ class CheckboxFilter extends Filter {
         this.choices.forEach((choice) => {
             choice.checked = false;
             // Check if input value in string array this.selectedChoice.
-            if (this.selectedChoice.includes(choice.value)) {
+            if (this.selectedChoice && this.selectedChoice.includes(choice.value)) {
                 choice.checked = true;
             }
         });
@@ -3735,7 +3735,7 @@ class CheckboxFilter extends Filter {
      * @returns {boolean} A boolean representing whether the checkbox filter is active or not.
      */
     isActive() {
-        if (this.selectedChoice.length > 0) {
+        if (this.selectedChoice && this.selectedChoice.length > 0) {
             return true;
         }
         return false;
@@ -3830,9 +3830,11 @@ class LocationFilter extends Filter {
      * Load the selected choice of the location filter.
      */
     loadChoice() {
-        this.autocompleter.inputElm.value = this.selectedChoice.name;
+        if (this.selectedChoice) {
+            this.autocompleter.inputElm.value = this.selectedChoice.name;
+        }
 
-        if (this.selectedChoice.perimiter) {
+        if (this.selectedChoice && this.selectedChoice.perimiter) {
             const tobechecked = this.node.querySelector(
                 'input[value="' + this.selectedChoice.perimiter + '"]'
             );
@@ -3862,7 +3864,7 @@ class LocationFilter extends Filter {
      * @returns {boolean} A boolean representing whether the location filter is active or not.
      */
     isActive() {
-        if (!this.selectedChoice.name) {
+        if (!this.selectedChoic || !this.selectedChoice.name) {
             return false;
         }
         return true;
