@@ -3672,6 +3672,7 @@ class CheckboxFilter extends Filter {
 
         if (!this.selectedChoice) {
             this.selectedChoice = [];
+            this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
         }
 
         this.loadChoice();
@@ -3805,6 +3806,7 @@ class LocationFilter extends Filter {
 
         if (!this.selectedChoice) {
             this.selectedChoice = {};
+            this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
         }
 
         this.autocompleter = new LocationAutocompleter(
@@ -3830,7 +3832,7 @@ class LocationFilter extends Filter {
      * Load the selected choice of the location filter.
      */
     loadChoice() {
-        if (this.selectedChoice) {
+        if (this.selectedChoice && this.selectedChoice.name) {
             this.autocompleter.inputElm.value = this.selectedChoice.name;
         }
 
@@ -3903,6 +3905,7 @@ class PriceFilter extends Filter {
 
         if (!this.selectedChoice) {
             this.selectedChoice = null;
+            this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
         }
 
         this.choices = this.node.querySelectorAll("input");
@@ -4080,6 +4083,7 @@ class DurationFilter extends Filter {
 
         if (!this.selectedChoice) {
             this.selectedChoice = null;
+            this.menu.step.scout.account.setFilter(this.name, this.selectedChoice);
         }
 
         this.choices = this.node.querySelectorAll("input");
