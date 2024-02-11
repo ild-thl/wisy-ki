@@ -1975,6 +1975,7 @@ $(window).load(function () {
 
 $(document).ready(function () {
 
+    let displayStyle = $('.wisy-niveau-block').css('display');
 
     $('form[name="kurs"] input').on('keydown', function (e) {
         // Überprüfen, ob die gedrückte Taste die Enter-Taste ist (key 'Enter')
@@ -1991,7 +1992,7 @@ $(document).ready(function () {
 
     $('.wisy-lernform-kategorie input[type="checkbox"]').on('change', function () {
         $('.wisy-lernform-kategorie input[type="checkbox"]').not(this).prop('checked', false);
-        $('.wisy-niveau-block').hide();
+        //$('.wisy-niveau-block').hide();
     });
 
     let lernform = '';
@@ -2002,6 +2003,79 @@ $(document).ready(function () {
     });
 
     let selectedValues = {};
+
+    // Iteriere durch alle versteckten Input-Felder
+    $('input[name="editEsco_kompetenzen[]"]').each(function () {
+        // Spalte den Wert des Input-Felds anhand des "+++"-Trennzeichens auf
+        var parts = $(this).val().split('+++');
+
+        // Der erste Teil ist der Schlüssel, der zweite Teil ist der Wert
+        var key = parts[0];
+        var value = parts[1];
+
+        // Füge das Paar dem Objekt hinzu
+        selectedValues[key] = value;
+    });
+
+    // Iteriere durch das Objekt und füge die Key-Value-Paare in die span-Elemente ein
+    $.each(selectedValues, function (key, value) {
+        var escoKomp = $('<span>', {
+            text: key,
+            class: "esco-komp",
+            'data-value': value,  // Füge das Key als data-value hinzu
+            css: {
+                backgroundColor: '#66ccff',
+                fontSize: '14px',
+                color: 'black',
+                border: '1px solid black',
+                padding: '5px 10px',
+                position: 'relative',
+                margin: '5px'
+            },
+        });
+        // Schließfunktion hinzufügen
+        var closeButton = $('<button>', {
+            text: 'x',
+            type: 'button',
+            class: 'close-button',
+            css: {
+                backgroundColor: 'red',
+                color: 'white',
+                borderRadius: '50%',
+                border: 'none',
+                width: '20px',
+                height: '20px',
+                position: 'absolute',
+                top: '-10px',
+                right: '-10px',
+                cursor: 'pointer'
+            },
+            on: {
+                click: function (e) {
+                    // Lese das Key aus dem data-value Attribut
+                    var selectedword = $(this).parent().text().trim();
+                    selectedword = selectedword.slice(0, -1);
+                    // Prüfen, ob der Schlüssel (selectedword) im Objekt (kompetenzenObj) existiert
+                    if (selectedValues[selectedword] !== undefined) {
+                        delete selectedValues[selectedword]; // Schlüssel-Wert-Paar entfernen
+                    }
+                    // Entferne das span-Element
+                    $(this).parent().remove();
+                    console.log(selectedValues);
+                    return false;
+                },
+                mouseenter: function () {
+                    $(this).css('background-color', 'darkred');
+                },
+                mouseleave: function () {
+                    $(this).css('background-color', 'red');
+                }
+            }
+        });
+        escoKomp.append(closeButton);
+        $('.stichwort-area').append(escoKomp);
+    });
+
 
     /* ###################################################################################################################
      *
@@ -2014,7 +2088,7 @@ $(document).ready(function () {
     let kursbeschreibung = $('.wisy-kursbeschreibung-text');
 
 
-    // Event-Listener hinzufügen
+// Event-Listener hinzufügen
     kursbeschreibung.on('blur', function () {
         // neuen Text abrufen
         let courseDescription = $(this).val();
@@ -2026,42 +2100,47 @@ $(document).ready(function () {
             courseDescription = courseLearningGoal;
         }
 
-        let jsonData = {
-            courseTitle: courseTitle,
-            courseDescription: courseDescription
-        };
+        if (courseDescription.length > 0) {
 
-        $.ajax({
-            type: 'POST',
-            url: url,
-            data: jsonData,
-            dataType: 'text',
-            success: function (response) {
+            let jsonData = {
+                courseTitle: courseTitle,
+                courseDescription: courseDescription
+            };
 
-                if ($('#berufliche_bildung-checkbox').prop('checked') === true) {
-                    switch (response) {
-                        case 'A':
-                            $('.niv-text').css('display', 'none');
-                            $('.niveauA .niv-text').css('display', 'block');
-                            break;
-                        case 'B':
-                            $('.niv-text').css('display', 'none');
-                            $('.niveauB .niv-text').css('display', 'block');
-                            //   $('.niveauC .niv-text').css('display', 'none');
-                            break;
-                        case 'C':
-                            $('.niv-text').css('display', 'none');
-                            $('.niveauC .niv-text').css('display', 'block');
-                            break;
-                        default:
-                            response = 'Unbekannte Stufe';
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: jsonData,
+                dataType: 'text',
+                success: function (response) {
+
+                    if ($('#berufliche_bildung-checkbox').prop('checked') === true) {
+                        switch (response) {
+                            case 'A':
+                                $('.niv-text').css('display', 'none');
+                                $('.niveauA .niv-text').css('display', 'block');
+                                break;
+                            case 'B':
+                                $('.niv-text').css('display', 'none');
+                                $('.niveauB .niv-text').css('display', 'block');
+                                //   $('.niveauC .niv-text').css('display', 'none');
+                                break;
+                            case 'C':
+                                $('.niv-text').css('display', 'none');
+                                $('.niveauC .niv-text').css('display', 'block');
+                                break;
+                            default:
+                                response = 'Unbekannte Stufe';
+                        }
                     }
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
                 }
-            },
-            error: function (xhr, status, error) {
-                console.error(error);
-            }
-        });
+            });
+        } else {
+            $('.niv-text').css('display', 'none');
+        }
     });
 
     lernzieltext.on('blur', function () {
@@ -2074,46 +2153,51 @@ $(document).ready(function () {
             courseLearningGoal = $('.wisy-kursbeschreibung-text').val();
         }
 
-        let jsonData = {
-            courseTitle: courseTitle,
-            courseDescription: courseLearningGoal
-        };
+        if (courseLearningGoal.length > 0) {
 
-        $.ajax({
-            type: 'POST',
-            url: url,
-            data: jsonData,
-            dataType: 'text',
-            success: function (response) {
+            let jsonData = {
+                courseTitle: courseTitle,
+                courseDescription: courseLearningGoal
+            };
 
-                if ($('#berufliche_bildung-checkbox').prop('checked') === true) {
-                    switch (response) {
-                        case 'A':
-                            // level = 'NiveauA';
-                            $('.niv-text').css('display', 'none');
-                            $('.niveauA .niv-text').css('display', 'block');
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: jsonData,
+                dataType: 'text',
+                success: function (response) {
 
-                            break;
-                        case 'B':
-                            // level = 'NiveauB';
-                            $('.niv-text').css('display', 'none');
-                            $('.niveauB .niv-text').css('display', 'block');
-                            //   $('.niveauC .niv-text').css('display', 'none');
-                            break;
-                        case 'C':
-                            //  level = 'NiveauC';
-                            $('.niv-text').css('display', 'none');
-                            $('.niveauC .niv-text').css('display', 'block');
-                            break;
-                        default:
-                            response = 'Unbekannte Stufe';
+                    if ($('#berufliche_bildung-checkbox').prop('checked') === true) {
+                        switch (response) {
+                            case 'A':
+                                // level = 'NiveauA';
+                                $('.niv-text').css('display', 'none');
+                                $('.niveauA .niv-text').css('display', 'block');
+
+                                break;
+                            case 'B':
+                                // level = 'NiveauB';
+                                $('.niv-text').css('display', 'none');
+                                $('.niveauB .niv-text').css('display', 'block');
+                                //   $('.niveauC .niv-text').css('display', 'none');
+                                break;
+                            case 'C':
+                                //  level = 'NiveauC';
+                                $('.niv-text').css('display', 'none');
+                                $('.niveauC .niv-text').css('display', 'block');
+                                break;
+                            default:
+                                response = 'Unbekannte Stufe';
+                        }
                     }
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
                 }
-            },
-            error: function (xhr, status, error) {
-                console.error(error);
-            }
-        });
+            });
+        } else {
+            $('.niv-text').css('display', 'none');
+        }
     });
 
     /* ###################################################################################################################
@@ -2122,7 +2206,7 @@ $(document).ready(function () {
      *
      */
 
-    ////HIER WAR SONST DOCUMENT ZUENDE
+////HIER WAR SONST DOCUMENT ZUENDE
 
     $('.wisy-kategorie-check').on('change', function () {
         $('.wisy-kategorie-check').not(this).prop('checked', false);
@@ -2221,6 +2305,7 @@ $(document).ready(function () {
         }
     });
 
+
     $('#kompetenzvorschlag').autocomplete({
         source: function (request, response) {
             $.ajax({
@@ -2314,6 +2399,7 @@ $(document).ready(function () {
         }
     });
 
+
     $('#wisy-esco-gen').on('click', function () {
 
         if (kursbeschreibung.val() == '' && lernzieltext.val() == '') {
@@ -2385,7 +2471,6 @@ $(document).ready(function () {
                                             delete selectedValues[selectedword]; // Schlüssel-Wert-Paar entfernen
                                         }
                                         $(this).parent().remove();
-                                        console.log(selectedValues);
                                     },
                                     mouseenter: function () {
                                         $(this).css('background-color', 'darkred');
@@ -2428,6 +2513,7 @@ $(document).ready(function () {
         }
     });
 
+
     $('.wisy-select-hauptkategorie').on('change', function () {
         var url = '/edit?action=hauptthema';
         var option = $(this).val();
@@ -2446,9 +2532,90 @@ $(document).ready(function () {
         });
 
     });
+// Initialisiere eine leere Variable für den ausgewählten Text
+    var selectedCheckboxText = [];
 
-// Überprüfen, ob eine Checkbox ausgewählt wurde, bevor ein Textfeld aktiviert wird
-    var checkboxSelected = false;
+    /*    // Iteriere über alle bereits ausgewählten Checkboxen mit der Klasse 'wisy-kategorie-check'
+        $('.wisy-kategorie-check:checked').each(function () {
+            // Füge den Text der ausgewählten Checkbox der Variable hinzu
+            var url = '/edit?action=kategorie';
+            var checkboxValues = {};
+            checkboxValues[this.name] = this.checked ? this.value : '';
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {checkboxValues: checkboxValues},
+                success: function (response) {
+                    $('.niveau-stufen').html(response);
+
+                    $('.wisy-niveau-block').show();
+                    //   if (!$('.wisy-kategorie-check').prop('checked')) $('.niveau-stufen').css({'display': 'none'})
+                    $('.niveau-stufen').css({'display': 'block'});
+
+                    //(Modal) Hilfe fuer die Niveaustufen
+                    $('.niv-infoA').click(function () {
+                        $('.niveauInfo-a').css("display", "block");
+                    });
+
+                    $('.niv-infoB').click(function () {
+                        $('.niveauInfo-b').css("display", "block");
+                    });
+
+                    $('.niv-infoC').click(function () {
+                        $('.niveauInfo-c').css("display", "block");
+                    });
+
+                    $('.niveauInfo-close').click(function () {
+                        $('.niveauInfo').css("display", "none");
+                        $('body').css('overflow-y', 'auto');
+                    });
+
+                    $('.wisy-niveaustufen-check').on('change', function () {
+                        $('.wisy-niveaustufen-check').not(this).prop('checked', false);
+                    });
+
+                    // Füge einen Event-Handler für Änderungen der Checkboxen hinzu
+                    $('.wisy-niveaustufen-check').on('change', function () {
+                        if ($(this).prop('checked')) {
+                            // Wenn die Checkbox ausgewählt ist, rufe die Funktion zum Auslesen des Textes auf
+                            readNivTitelText($(this));
+                            //niveaustufe2 = $(this).val();
+                            console.log('Ausgewählter Wert:', niveaustufeCheckboxText);
+                        } else {
+                            niveaustufeCheckboxText = '';
+                        }
+                    });
+
+                    if (!checkboxSelected) $('.wisy-niveau-block').hide();
+
+                    /!**
+                     * SPRACHNIVEAU CHECK
+                     * @type {*[]}
+                     *!/
+
+                    $('.wisy-sprachstufen-check').on('change', function () {
+                        // Überprüfen, ob die Checkbox ausgewählt ist
+                        if ($(this).prop('checked')) {
+                            // Wenn ausgewählt, füge den Wert zum Array hinzu
+                            selectedCheckboxText.push($(this).val());
+                        } else {
+                            // Wenn nicht ausgewählt, entferne  den Wert aus dem Array
+                            let index = selectedCheckboxText.indexOf($(this).val());
+                            if (index !== -1) {
+                                selectedCheckboxText.splice(index, 1);
+                            }
+                        }
+                    });
+                },
+                error: function () {
+                    console.log('FEHLER: Beim Empfangen Kategorie.');
+                }
+            });
+
+        });*/
+
+
     $('.wisy-kategorie-check').on('change', function () {
         if ($(this).is(':checked')) {
             checkboxSelected = true;
@@ -2456,6 +2623,7 @@ $(document).ready(function () {
             checkboxSelected = $('.wisy-kategorie-check:checked').length > 0;
         }
     });
+
 
 // Überprüfen, ob ein Textfeld aktiviert wurde, bevor eine Checkbox ausgewählt wurde
     $('textarea, input[type=text], select, .wisy-foerderungen-checkbox, .abschluss-select, .lernform-select,form[name=kurs] a,form[name=kurs] small,form[name=kurs] span, form[name=kurs] div, #wisy-kurseinstieg, .wisy-lernform-kategorie input').on('focus', function () {
@@ -2466,10 +2634,12 @@ $(document).ready(function () {
         }
     });
 
+
 // Entfernen Sie die "active"-Klasse, wenn das Textfeld den Fokus verliert
     $('textarea, input[type=text], select, .wisy-foerderungen-checkbox, .abschluss-select, .lernform-select, form[name=kurs] a,form[name=kurs] small,form[name=kurs] span, form[name=kurs] div, .wisy-lernform-kategorie input').on('blur', function () {
         $(this).removeClass('active');
     });
+
 
     let checkedStufen = [];
 
@@ -2487,12 +2657,6 @@ $(document).ready(function () {
             data: {checkboxValues: checkboxValues},
             success: function (response) {
                 $('.niveau-stufen').html(response);
-
-                /*   if ($('#berufliche_bildung-checkbox').prop('checked') === true || $('#sprache-checkbox').prop('checked') === true) {
-                       $('.wisy-kursniveau-cell').css({'display': 'block'});
-                   } else {
-                       $('.wisy-kursniveau-cell').css({'display': 'none'});
-                   }*/
 
                 $('.wisy-niveau-block').show();
                 //   if (!$('.wisy-kategorie-check').prop('checked')) $('.niveau-stufen').css({'display': 'none'})
@@ -2522,30 +2686,52 @@ $(document).ready(function () {
 
                 if (!checkboxSelected) $('.wisy-niveau-block').hide();
 
-                /**
-                 * SPRACHNIVEAU CHECK
-                 * @type {*[]}
-                 */
-
-                $('.wisy-sprachstufen-check').on('change', function () {
-                    // Überprüfen, ob die Checkbox ausgewählt ist
-                    if ($(this).prop('checked')) {
-                        // Wenn ausgewählt, füge den Wert zum Array hinzu
-                        checkedStufen.push($(this).val());
-                    } else {
-                        // Wenn nicht ausgewählt, entferne  den Wert aus dem Array
-                        let index = checkedStufen.indexOf($(this).val());
-                        if (index !== -1) {
-                            checkedStufen.splice(index, 1);
-                        }
-                    }
-                });
             },
             error: function () {
                 console.log('FEHLER: Beim Empfangen der Themen ist ein Problem entstanden.');
             }
         });
     });
+
+    /*  $('.wisy-sprachstufen-check').on('change', function () {
+          // Überprüfen, ob die Checkbox ausgewählt ist
+          readNivTitelSprachText($(this));
+      });*/
+
+    var selectedNiveauTitelValues = [];
+
+// Funktion zum Auslesen des Textes des niv-titel-Elements
+    function readNivTitelText() {
+        selectedNiveauTitelValues = [];
+        // Finde das übergeordnete Element mit der Klasse 'wisy-niveaustufen'
+        $('.wisy-niveaustufen-check').each(function () {
+            var checkbox = $(this);
+            var niveauElement = checkbox.closest('.wisy-niveaustufen');
+            var nivTitelElement = niveauElement.find('.niv-titel');
+            var nivCheckboxText = nivTitelElement.text();
+
+            if (checkbox.prop('checked')) {
+                selectedNiveauTitelValues.push(nivCheckboxText);
+            }
+        });
+    }
+
+    var selectedNivTitelValues = [];
+
+    function readNivTitelSprachText() {
+        selectedNivTitelValues = []; // Reset the array
+
+        $('.wisy-sprachstufen-check').each(function () {
+            var checkbox = $(this);
+            var niveauElement = checkbox.closest('.wisy-sprachenstufen');
+            var nivTitelElement = niveauElement.find('.niv-titel');
+            var niveaustufeCheckboxText = nivTitelElement.text();
+
+            if (checkbox.prop('checked')) {
+                selectedNivTitelValues.push(niveaustufeCheckboxText);
+            }
+        });
+    }
 
     /***************************************
      *****************VORSCHAU***************
@@ -2558,15 +2744,21 @@ $(document).ready(function () {
         /*
         Holt die Eingabe Felder für die Vorschau
          */
+        readNivTitelSprachText();
+        readNivTitelText();
+
         let kurstitel = $('.wisy-kurs-titel');
+
         let kursbeschreibung = $('.wisy-kursbeschreibung-text');
         let lernziel = $('.wisy-lernziel-text');
-        let voraussetzung = $('.wisy-voraussetzung-text');
-        let zielgruppe = $('.wisy-zielgruppe-text');
+        //  let voraussetzung = $('.wisy-voraussetzung-text');
+        //  let zielgruppe = $('.wisy-zielgruppe-text');
         let themaHauptkategorie = $('.wisy-select-hauptkategorie option:selected');
         let themaUnterkategorie = $('.wisy-select-unterkategorie option:selected');
-        let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
-        let sprachstufe = checkedStufen;
+        // let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
+        let niveaustufe = selectedNivTitelValues.length > 0 ? selectedNivTitelValues.join(', ') : selectedNiveauTitelValues.join(', ');
+
+        // let sprachstufe = checkedStufen;
         //   let abschlussart = $('.abschluss-select');
         let hinweisRedaktion = $('.wisy-nachricht-content input');
 
@@ -2591,6 +2783,18 @@ $(document).ready(function () {
              */
             let durchf_terminBeginn = $('input[name="beginn[]"]').eq(index).val();
             let durchf_terminEnde = $('input[name="ende[]"]').eq(index).val();
+            let formattedDateBeginn = '';
+            let formattedDateEnde = '';
+
+            if (durchf_terminBeginn.length > 0) {
+                let dateObjectBeginn = new Date(durchf_terminBeginn);
+                formattedDateBeginn = `${dateObjectBeginn.getDate()}.${dateObjectBeginn.getMonth() + 1}.${dateObjectBeginn.getFullYear()}`;
+            }
+
+            if (durchf_terminEnde.length > 0) {
+                let dateObjectEnde = new Date(durchf_terminEnde);
+                formattedDateEnde = `${dateObjectEnde.getDate()}.${dateObjectEnde.getMonth() + 1}.${dateObjectEnde.getFullYear()}`;
+            }
 
             /***
              * Wochentage der Durchfuehrungstage
@@ -2679,8 +2883,8 @@ $(document).ready(function () {
              * Hinweis fuer die Durchfuehrung
              * @type {jQuery|HTMLElement|*}
              */
-            let durchf_bemerkung = $('input[name="bemerkungen[]"]').eq(index).val();
-
+          //  let durchf_bemerkung = $('input[name="bemerkungen[]"]').eq(index).val();
+            let durchf_bemerkung = '';
             let durchf_url = $('input[name="url[]"]').eq(index).val();
             if (durchf_url !== '') {
                 if (!/^https?:\/\//i.test(durchf_url)) {
@@ -2720,7 +2924,7 @@ $(document).ready(function () {
              * Fuegt alle eingaben in die Tabelle als Zeile
              * @type {string}
              */
-            let tablerow = "<td>" + (durchf_terminBeginn.length > 0 ? (durchf_terminBeginn + (durchf_terminEnde.length > 0 ? ' - ' + durchf_terminEnde : '')) + "<br>" : '')
+            let tablerow = "<td>" + (formattedDateBeginn.length > 0 ? (formattedDateBeginn + (formattedDateEnde.length > 0 ? ' - ' + formattedDateEnde : '')) + "<br>" : '')
                 + durchf_kurstageMo + durchf_kurstageDi + durchf_kurstageMi + durchf_kurstageDo + durchf_kurstageFr + durchf_kurstageSa + durchf_kurstageSo
                 + (durchf_terminoptionErg.length > 0 ? "<br>" + durchf_terminoptionErg : '') + (durchf_zeitvon.length > 0 ? "<br>" + durchf_zeitvon + ' UHR' : '') + (durchf_zeitbis.length > 0 ? ' - ' + durchf_zeitbis + ' UHR' : '')
                 + "</td>" +
@@ -2758,35 +2962,38 @@ $(document).ready(function () {
             $('.wisy-vorschau-lernziel').text('').text('Sie haben kein Lernziel!');
         }
 
-        if (voraussetzung !== '') {
-            let vsValue = voraussetzung.val();
-            let formattedText = vsValue.replace(/\n/g, '<br>');
-            $('.wisy-vorschau-voraussetzung').html(formattedText);
-        } else {
-            $('.wisy-vorschau-voraussetzung').text('').text('Sie haben keine Voraussetzungen in Ihrem Kurs!');
-        }
+        /*    if (voraussetzung !== '') {
+                let vsValue = voraussetzung.val();
+                let formattedText = vsValue.replace(/\n/g, '<br>');
+                $('.wisy-vorschau-voraussetzung').html(formattedText);
+            } else {
+                $('.wisy-vorschau-voraussetzung').text('').text('Sie haben keine Voraussetzungen in Ihrem Kurs!');
+            }
 
-        if (zielgruppe !== '') {
-            let zValue = zielgruppe.val();
-            let formattedText = zValue.replace(/\n/g, '<br>');
-            $('.wisy-vorschau-zielgruppe').html(formattedText);
-        } else {
-            $('.wisy-vorschau-zielgruppe').text('').text('Sie haben keine Zielgruppe festgelegt!');
-        }
+            if (zielgruppe !== '') {
+                let zValue = zielgruppe.val();
+                let formattedText = zValue.replace(/\n/g, '<br>');
+                $('.wisy-vorschau-zielgruppe').html(formattedText);
+            } else {
+                $('.wisy-vorschau-zielgruppe').text('').text('Sie haben keine Zielgruppe festgelegt!');
+            }
+*/
+        /*   $('.wisy-niveaustufen-check').change(function() {
+               // Überprüfe, ob die Checkbox ausgewählt ist
+               if($(this).prop('checked')) {
+                   // Wenn ausgewählt, hole den Text des zugehörigen Labels
+                   niveaustufe = $(this).siblings('label').text();//$('label[for="' + $(this).attr('id') + '"]').data('text');
+                   console.log('niveaustufe ist '+ niveaustufe + 'Das hier ist teil 2:'+ $(this).siblings('label').text());
+               }
+           });*/
+
 
         if (themaHauptkategorie !== '' && themaUnterkategorie !== '')
             $('.wisy-vorschau-thema').html(themaUnterkategorie.text());
 
-
-        // $('.wisy-vorschau-kursniveau').text('').text(niveaustufe !== undefined && checkedStufen.length <= 0 ? niveaustufe : checkedStufen);
-        $('.wisy-vorschau-kursniveau').text('').text(sprachstufe.length > 0 && niveaustufe == undefined ? sprachstufe.join(', ') : niveaustufe);
-
-
-        /*if (abschlussart !== '') $('.wisy-vorschau-abschluss').text('').text(abschlussart.val());
-        else $('.wisy-vorschau-abschluss').text('').text('Ihr Kurs hat keinen Abschluss!');*/
+        $('.wisy-vorschau-kursniveau').text('').text(niveaustufe);
 
         let ausgewaehlteLernform = '';
-
         $('.wisy-lernform-checkbox').each(function () {
             var isChecked = $(this).prop('checked');
             var labelText = $(this).siblings('label').text();
@@ -2797,9 +3004,7 @@ $(document).ready(function () {
             $('.wisy-vorschau-lernform').text(ausgewaehlteLernform);
         });
 
-
-        let ausgewaehlteTexte = "";
-
+ /*       let ausgewaehlteTexte = "";
         $('.wisy-foerderungen-checkbox').each(function () {
             var isChecked = $(this).prop('checked');
             //  var value = $(this).val();
@@ -2814,206 +3019,40 @@ $(document).ready(function () {
                     ausgewaehlteTexte += ($('.wisy-foerderungsnummerB').val() !== '' ? (' +NR.: ' + $('.wisy-foerderungsnummerB').val()) : '');
                 }
             }
-            $('.wisy-vorschau-foerderung').text(ausgewaehlteTexte);
-        });
+            $('.wisy-vorschau-foerderung').text('').text(ausgewaehlteTexte);
+        });*/
 
         $('.wisy-vorschau-stichwort').text('').text(Object.keys(selectedValues).length > 0 ? Object.keys(selectedValues).join(', ') : '');
         $('.wisy-vorschau-nachricht').text('').text(hinweisRedaktion !== '' ? hinweisRedaktion.val() : '');
 
-    });
+        // Versteckte HTML-Elemente erstellen
+        let hiddenElementsContainer = $('#hiddenElementsContainer');
+        hiddenElementsContainer.empty(); // Vorherige Elemente entfernen
 
-
-    let kursspeichern = [];
-
-    $('.wisy-vorschau-speichern').click(function () {
-        let kurstitel = $('.wisy-kurs-titel').val();
-        let kursbeschreibung = $('.wisy-kursbeschreibung-text').val();
-        let lernziel = $('.wisy-lernziel-text').val();
-        let voraussetzung = $('.wisy-voraussetzung-text').val();
-        let zielgruppe = $('.wisy-zielgruppe-text').val();
-        let themaHauptkategorie = $('.wisy-select-hauptkategorie option:selected').text();
-        let themaUnterkategorie = $('.wisy-select-unterkategorie option:selected').text();
-        let niveaustufe = $('.wisy-niveaustufen-check:checked').val();
-        let sprachstufe = checkedStufen;
-        let abschlussart = $('.abschluss-select').val();
-        //  let lernform = $('.lernform-select').val(); ALT
-        let hinweisRedaktion = $('.wisy-nachricht-content input').val();
-
-        let durchfArray = [];
-
-        $('input[name="nr[]"]').each(function (index) {
-            let durchf_nr = $(this).val();
-            let durchf_terminBeginn = $('input[name="beginn[]"]').eq(index).val();
-            let durchf_terminEnde = $('input[name="ende[]"]').eq(index).val();
-            let durchf_kurstageMo = $('input[name="kurstage0[]"]').eq(index).val() > 0 ? 'Mo ' : '';
-            let durchf_kurstageDi = $('input[name="kurstage2[]"]').eq(index).val() > 0 ? 'Di ' : '';
-            let durchf_kurstageMi = $('input[name="kurstage4[]"]').eq(index).val() > 0 ? 'Mi ' : '';
-            let durchf_kurstageDo = $('input[name="kurstage6[]"]').eq(index).val() > 0 ? 'Do ' : '';
-            let durchf_kurstageFr = $('input[name="kurstage8[]"]').eq(index).val() > 0 ? 'Fr ' : '';
-            let durchf_kurstageSa = $('input[name="kurstage10[]"]').eq(index).val() > 0 ? 'Sa' : '';
-            let durchf_kurstageSo = $('input[name="kurstage12[]"]').eq(index).val() > 0 ? 'So' : '';
-
-            let durchf_terminoptionErg = '';
-            let durchf_terminoption = $('select[name="beginnoptionen[]"]').eq(index).val();
-            if (durchf_terminoption === '1') durchf_terminoptionErg = 'Beginnt laufend';
-            else if (durchf_terminoption === '2') durchf_terminoptionErg = 'Beginnt w' + oe + 'chentlich';
-            else if (durchf_terminoption === '4') durchf_terminoptionErg = 'Beginnt monatlich';
-            else if (durchf_terminoption === '8') durchf_terminoptionErg = 'Beginnt zweimonatlich';
-            else if (durchf_terminoption === '16') durchf_terminoptionErg = 'Beginnt quartalweise';
-            else if (durchf_terminoption === '32') durchf_terminoptionErg = 'Beginnt halbj' + ae + 'hrlich';
-            else if (durchf_terminoption === '64') durchf_terminoptionErg = 'Beginnt j' + ae + 'hrlich';
-            else if (durchf_terminoption === '256') durchf_terminoptionErg = 'Termin noch offen';
-            else if (durchf_terminoption === '512') durchf_terminoptionErg = 'Startgarantie';
-
-            let durchf_dauerErg = '';
-            let durchf_dauer = $('select[name="dauer[]"]').eq(index).val();
-            if (durchf_dauer === '1') durchf_dauerErg = '1 Tag';
-            else if (durchf_dauer === '2') durchf_dauerErg = '2 Tage';
-            else if (durchf_dauer === '3') durchf_dauerErg = '3 Tage';
-            else if (durchf_dauer === '4') durchf_dauerErg = '4 Tage';
-            else if (durchf_dauer === '5') durchf_dauerErg = '5 Tage';
-            else if (durchf_dauer === '6') durchf_dauerErg = '6 Tage';
-            else if (durchf_dauer === '7') durchf_dauerErg = '1 Woche';
-            else if (durchf_dauer === '14') durchf_dauerErg = '2 Wochen';
-            else if (durchf_dauer === '21') durchf_dauerErg = '3 Wochen';
-            else if (durchf_dauer === '28') durchf_dauerErg = '4 Wochen';
-            else if (durchf_dauer === '35') durchf_dauerErg = '5 Wochen';
-            else if (durchf_dauer === '42') durchf_dauerErg = '6 Wochen';
-            else if (durchf_dauer === '49') durchf_dauerErg = '7 Wochen';
-            else if (durchf_dauer === '56') durchf_dauerErg = '8 Wochen';
-            else if (durchf_dauer === '63') durchf_dauerErg = '9 Wochen';
-            else if (durchf_dauer === '70') durchf_dauerErg = '10 Wochen';
-            else if (durchf_dauer === '77') durchf_dauerErg = '11 Wochen';
-            else if (durchf_dauer === '84') durchf_dauerErg = '12 Wochen';
-            else if (durchf_dauer === '91') durchf_dauerErg = '13 Wochen';
-            let durchf_tagescodeErg = '';
-            let durchf_tagescode = $('select[name="tagescode[]"]').eq(index).val();
-            if (durchf_tagescode === '1') durchf_tagescodeErg = 'Ganzt' + ae + 'gig';
-            else if (durchf_tagescode === '2') durchf_tagescodeErg = 'Vormittags';
-            else if (durchf_tagescode === '3') durchf_tagescodeErg = 'Nachmittags';
-            else if (durchf_tagescode === '4') durchf_tagescodeErg = 'Abends';
-            else if (durchf_tagescode === '5') durchf_tagescodeErg = 'Wochenende';
-
-            let durchf_zeitvon = $('input[name="zeit_von[]"]').eq(index).val();
-            let durchf_zeitbis = $('input[name="zeit_bis[]"]').eq(index).val();
-            let durchf_stunden = $('input[name="stunden[]"]').eq(index).val();
-            let durchf_preis = $('input[name="preis[]"]').eq(index).val();
-            let durchf_teilnehmer = $('input[name="teilnehmer[]"]').eq(index).val();
-            let durchf_bemerkung = $('input[name="bemerkungen[]"]').eq(index).val();
-            let durchf_url = $('input[name="url[]"]').eq(index).val();
-            if (durchf_url !== '') {
-                if (!/^https?:\/\//i.test(durchf_url)) {
-                    durchf_url = 'https://www.' + durchf_url;
-                }
-            } else {
-                durchf_url = '';
-            }
-
-            // let durchf_rollstuhl = $('input[name="rollstuhlgerecht[]"]').eq(index).val();
-            let durchf_rollstuhl = '';
-            if ($('input[name="rollstuhlgerecht[]"]').eq(index).prop('checked')) {
-                durchf_rollstuhl = 'Barrierefreier Zugang';
-            } else {
-                durchf_rollstuhl = '';
-            }
-
-            let durchf_einstieg = '';
-            if ($('input[name="einstieg[]"]').eq(index).prop('checked')) {
-                durchf_einstieg = 'Einstieg jederzeit m' + oe + 'glich';
-            } else {
-                durchf_einstieg = '';
-            }
-            let durchf_sonderpreistage = $('input[name="sonderpreistage[]"]').eq(index).val();
-            let durchf_sonderpreis = $('input[name="sonderpreis[]"]').eq(index).val();
-            let durchf_preishinweis = $('input[name="preishinweise[]"]').eq(index).val();
-            let durchf_strasse = $('input[name="strasse[]"]').eq(index).val();
-            let durchf_plz = $('input[name="plz[]"]').eq(index).val();
-            let durchf_ort = $('input[name="ort[]"]').eq(index).val();
-
-
-            var ausgewaehlteTexte = "";
-            $('.wisy-foerderungen-checkbox').each(function () {
-                var isChecked = $(this).prop('checked');
-                var labelText = $(this).siblings('label').text();
-                if (isChecked) {
-                    ausgewaehlteTexte += (ausgewaehlteTexte.length > 0 ? ', ' + labelText : labelText);
-                    if (labelText === 'Aktivierungsgutschein' || labelText === 'Bildungsgutschein') {
-                        ausgewaehlteTexte += ($('.wisy-foerderungsnummerA').val() !== '' ? (' +AZAV NR.: ' + $('.wisy-foerderungsnummerA').val()) : '');
-                    }
-                    if (labelText === 'Bildungsurlaub') {
-                        ausgewaehlteTexte += ($('.wisy-foerderungsnummerB').val() !== '' ? (' +NR.: ' + $('.wisy-foerderungsnummerB').val()) : '');
-                    }
-                }
-            });
-
-            let data = {
-                'kurstitel': kurstitel,
-                'kursbeschreibung': kursbeschreibung,
-                'lernziel': lernziel,
-                'voraussetzung': voraussetzung,
-                'zielgruppe': zielgruppe,
-                'themaHauptkategorie': themaHauptkategorie,
-                'themaUnterkategorie': themaUnterkategorie,
-                'niveaustufe': niveaustufe == undefined ? sprachstufe : niveaustufe,
-                'abschlussart': abschlussart,
-                'lernform': lernform,
-                'foerderungen': ausgewaehlteTexte,
-                'stichwort': selectedValues,
-                'hinweisRedaktion': hinweisRedaktion
-            };
-
-            let durchfTag = {
-                'durchf_Nr': durchf_nr,
-                'datum': durchf_terminBeginn + ' - ' + durchf_terminEnde,
-                'kurstage': durchf_kurstageMo + ' ' + durchf_kurstageDi + ' ' + durchf_kurstageMi + ' ' + durchf_kurstageDo + ' ' + durchf_kurstageFr + ' ' + durchf_kurstageSa + ' ' + durchf_kurstageSo,
-                'terminoption': durchf_terminoptionErg,
-                'dauer': durchf_dauerErg,
-                'tagescode': durchf_tagescodeErg,
-                'uhrzeiten': durchf_zeitvon + ' - ' + durchf_zeitbis,
-                'stunden': durchf_stunden,
-                'preis': durchf_preis,
-                'sonderpreis': durchf_sonderpreis,
-                'sonderpreistage': durchf_sonderpreistage,
-                'preishinweis': durchf_preishinweis,
-                'strasse': durchf_strasse,
-                'plz': durchf_plz,
-                'ort': durchf_ort,
-                'teilnehmer': durchf_teilnehmer,
-                'bemerkung': durchf_bemerkung,
-                'url': durchf_url,
-                'barrierefrei': durchf_rollstuhl,
-                'einstieg': durchf_einstieg
-            };
-            durchfArray.push(durchfTag);
-            kursspeichern.push(data);
-            kursspeichern.push(durchfArray);
-        });
-        let jsonString = JSON.stringify(kursspeichern);
-        //  console.log(jsonString);
-
-        $.ajax({
-            type: 'post',
-            url: '/edit?action=kursspeichern',
-            data: {kurseingabe: jsonString},
-            success: function (response) {
-                console.log(response);
-                //  $('.stichwort-area').text(response);
-            },
-            error: function (response) {
-                console.log('fehler');
-            }
+        $.each(selectedValues, function (key, value) {
+            // Verstecktes HTML-Element für jedes Schlüssel-Wert-Paar erstellen
+            var hiddenInput = $('<input type="hidden">')
+                .attr('name', 'kompetenzen_stichwort[]')
+                .attr('value', key + '+++' + value);
+            // Verstecktes Element und optionaler Text dem Container hinzufügen
+            hiddenElementsContainer.append(hiddenInput);
         });
     });
 });
+
+function deleteSelectedThema(button) {
+    // Elternknoten des Buttons abrufen und den Button daraus entfernen
+    button.parentNode.remove();
+}
 
 
 /**
  * Kursansicht scroll to Titel
  */
-window.onload = function () {
+/*window.onload = function () {
     var element = document.querySelector('.wisyr_kursinfos');
     element.scrollIntoView();
-};
+};*/
 
 function updateAccordion(sectionId, checkboxId, imageId) {
     var section = document.getElementById(sectionId);
