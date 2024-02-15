@@ -1,6 +1,6 @@
 [submodule "coreki"]
 	path = coreki
-	url = git@github.com:wisydb/coreki.git
+	url = https://github.com/wisydb/coreki
 [submodule "ki_admin"]
 	path = ki_admin
-	url = git@github.com:wisydb/ki_admin.git
+	url = https://github.com/wisydb/ki_admin.git
