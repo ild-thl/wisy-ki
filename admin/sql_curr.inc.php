@@ -431,6 +431,10 @@ class DB_Sql
 				throw new Exception('Database query error');
 			} else {
 				// For INSERT, DELETE, UPDATE, return true on success
+	
+				$this->ResultAffectedRows = $stmt->affected_rows;
+				$this->ResultInsertId = $stmt->insert_id;
+				$this->ResultI = 0;
 				return true;
 			}
 		}
